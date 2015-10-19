@@ -50,7 +50,7 @@ func QueryExpressionAttributeValue(placeholder string, value *dynamodb.Attribute
 	}
 }
 
-// QueryFilter sets FilterExpression in dynamodb.QueryInput.
+// QueryFilterExpression sets FilterExpression in dynamodb.QueryInput.
 func QueryFilterExpression(expression string) QueryInput {
 	return func(req *dynamodb.QueryInput) {
 		req.FilterExpression = aws.String(expression)
