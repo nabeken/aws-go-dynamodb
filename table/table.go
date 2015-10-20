@@ -16,6 +16,11 @@ import (
 // ErrItemNotFound will be returned when the item is not found.
 var ErrItemNotFound = errors.New("dynamodb: item not found")
 
+// QueryItemUnmarshaler is an interface to unmarshal items in Query.
+type QueryItemUnmarshaler interface {
+	UnmarshalQueryItem(map[string]*dynamodb.AttributeValue) error
+}
+
 // PrimaryKey represents primary key such as HASH and RANGE in DynamoDB.
 type PrimaryKey struct {
 	dynamodb.AttributeDefinition
@@ -155,9 +160,18 @@ func (t *Table) Query(slice interface{}, opts ...option.QueryInput) (map[string]
 	items := reflect.MakeSlice(typ.Elem(), 0, len(resp.Items))
 	for _, item := range resp.Items {
 		p := reflect.New(typ.Elem().Elem())
-		if err := dynamodbattribute.ConvertFromMap(item, p.Interface()); err != nil {
+
+		// Use QueryItemUnmarshaler if available
+		var err error
+		if v, ok := p.Interface().(QueryItemUnmarshaler); ok {
+			err = v.UnmarshalQueryItem(item)
+		} else {
+			err = dynamodbattribute.ConvertFromMap(item, p.Interface())
+		}
+		if err != nil {
 			return nil, err
 		}
+
 		items = reflect.Append(items, p.Elem())
 	}
 
