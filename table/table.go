@@ -10,18 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
+	"github.com/nabeken/aws-go-dynamodb/item"
 	"github.com/nabeken/aws-go-dynamodb/table/option"
 )
 
 // ErrItemNotFound will be returned when the item is not found.
 var ErrItemNotFound = errors.New("dynamodb: item not found")
-
-// ItemUnmarshaler is an interface to unmarshal items.
-// If you need to unmarshal StringSet, NumberSet or BinarySet, you must implement this interface
-// since dynamodbattribute does not support for the Set types.
-type ItemUnmarshaler interface {
-	UnmarshalItem(map[string]*dynamodb.AttributeValue) error
-}
 
 // PrimaryKey represents primary key such as HASH and RANGE in DynamoDB.
 type PrimaryKey struct {
@@ -135,7 +129,7 @@ func (t *Table) GetItem(hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, v 
 	}
 
 	// Use ItemUnmarshaler if available
-	if unmarshaller, ok := v.(ItemUnmarshaler); ok {
+	if unmarshaller, ok := v.(item.Unmarshaler); ok {
 		return unmarshaller.UnmarshalItem(resp.Item)
 	}
 
@@ -165,15 +159,15 @@ func (t *Table) Query(slice interface{}, opts ...option.QueryInput) (map[string]
 	}
 
 	items := reflect.MakeSlice(typ.Elem(), 0, len(resp.Items))
-	for _, item := range resp.Items {
+	for _, i := range resp.Items {
 		p := reflect.New(typ.Elem().Elem())
 
 		// Use ItemUnmarshaler if available
 		var err error
-		if v, ok := p.Interface().(ItemUnmarshaler); ok {
-			err = v.UnmarshalItem(item)
+		if v, ok := p.Interface().(item.Unmarshaler); ok {
+			err = v.UnmarshalItem(i)
 		} else {
-			err = dynamodbattribute.ConvertFromMap(item, p.Interface())
+			err = dynamodbattribute.ConvertFromMap(i, p.Interface())
 		}
 		if err != nil {
 			return nil, err
