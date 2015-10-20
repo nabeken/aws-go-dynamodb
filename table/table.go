@@ -16,9 +16,11 @@ import (
 // ErrItemNotFound will be returned when the item is not found.
 var ErrItemNotFound = errors.New("dynamodb: item not found")
 
-// QueryItemUnmarshaler is an interface to unmarshal items in Query.
-type QueryItemUnmarshaler interface {
-	UnmarshalQueryItem(map[string]*dynamodb.AttributeValue) error
+// ItemUnmarshaler is an interface to unmarshal items.
+// If you need to unmarshal StringSet, NumberSet or BinarySet, you must implement this interface
+// since dynamodbattribute does not support for the Set types.
+type ItemUnmarshaler interface {
+	UnmarshalItem(map[string]*dynamodb.AttributeValue) error
 }
 
 // PrimaryKey represents primary key such as HASH and RANGE in DynamoDB.
@@ -132,6 +134,11 @@ func (t *Table) GetItem(hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, v 
 		return ErrItemNotFound
 	}
 
+	// Use ItemUnmarshaler if available
+	if unmarshaller, ok := v.(ItemUnmarshaler); ok {
+		return unmarshaller.UnmarshalItem(resp.Item)
+	}
+
 	return dynamodbattribute.ConvertFromMap(resp.Item, v)
 }
 
@@ -161,10 +168,10 @@ func (t *Table) Query(slice interface{}, opts ...option.QueryInput) (map[string]
 	for _, item := range resp.Items {
 		p := reflect.New(typ.Elem().Elem())
 
-		// Use QueryItemUnmarshaler if available
+		// Use ItemUnmarshaler if available
 		var err error
-		if v, ok := p.Interface().(QueryItemUnmarshaler); ok {
-			err = v.UnmarshalQueryItem(item)
+		if v, ok := p.Interface().(ItemUnmarshaler); ok {
+			err = v.UnmarshalItem(item)
 		} else {
 			err = dynamodbattribute.ConvertFromMap(item, p.Interface())
 		}

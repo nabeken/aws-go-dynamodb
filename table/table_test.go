@@ -2,21 +2,48 @@ package table
 
 import (
 	"os"
+	"sort"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/nabeken/aws-go-dynamodb/attributes"
 	"github.com/nabeken/aws-go-dynamodb/table/option"
 	"github.com/stretchr/testify/assert"
 )
 
 type TestItem struct {
-	UserID     string `json:"user_id"`
-	Date       int64  `json:"date"`
-	Status     string `json:"status"`
-	LoginCount int    `json:"login_count"`
+	UserID     string   `json:"user_id"`
+	Date       int64    `json:"date"`
+	Status     string   `json:"status"`
+	LoginCount int      `json:"login_count"`
+	Role       []string `json:"role"`
+}
+
+// UnmarshalItem implements ItemUnmarshaler interface.
+func (i *TestItem) UnmarshalItem(item map[string]*dynamodb.AttributeValue) error {
+	role := item["role"]
+
+	// dynamodbattribute.ConvertFromMap does not support StringSet so unset it
+	delete(item, "role")
+
+	if err := dynamodbattribute.ConvertFromMap(item, i); err != nil {
+		return err
+	}
+
+	// restore role by hand
+	if role == nil || role.SS == nil {
+		// empty role is still legal
+		return nil
+	}
+
+	for _, s := range role.SS {
+		i.Role = append(i.Role, *s)
+	}
+
+	return nil
 }
 
 func TestTable(t *testing.T) {
@@ -50,6 +77,9 @@ func TestTable(t *testing.T) {
 	rangeKey := attributes.Number(items[0].Date)
 	status := attributes.String(items[0].Status)
 
+	role := []string{"user", "manager"}
+	sort.Strings(role)
+
 	// Try to get non-exist key and it should return table.ErrItemNotFound
 	{
 		var actualItem TestItem
@@ -80,14 +110,16 @@ func TestTable(t *testing.T) {
 		assert.Equal("ConditionalCheckFailedException", dynamoErr.Code())
 	}
 
-	// Update the item with incrementing counter
+	// Update the item with incrementing counter and setting role as StringSet
 	{
 		err := dtable.UpdateItem(
 			hashKey,
 			rangeKey,
 			option.UpdateExpressionAttributeName("login_count", "#count"),
+			option.UpdateExpressionAttributeName("role", "#role"),
 			option.UpdateExpressionAttributeValue(":i", attributes.Number(1)),
-			option.UpdateExpression("ADD #count :i"),
+			option.UpdateExpressionAttributeValue(":role", attributes.StringSet(role)),
+			option.UpdateExpression("ADD #count :i SET #role = :role"),
 		)
 		if err != nil {
 			t.Error(err)
@@ -100,19 +132,22 @@ func TestTable(t *testing.T) {
 		if err := dtable.GetItem(hashKey, rangeKey, &actualItem, option.ConsistentRead()); err != nil {
 			t.Error(err)
 		}
+		sort.Strings(actualItem.Role)
 
 		assert.Equal("waiting", actualItem.Status)
 		assert.Equal(1, actualItem.LoginCount)
+		assert.Equal(role, actualItem.Role)
 	}
 
-	// Update the item with decrementing counter
+	// Update the item with decrementing counter and removing role
 	{
 		err := dtable.UpdateItem(
 			hashKey,
 			rangeKey,
 			option.UpdateExpressionAttributeName("login_count", "#count"),
+			option.UpdateExpressionAttributeName("role", "#role"),
 			option.UpdateExpressionAttributeValue(":i", attributes.Number(-1)),
-			option.UpdateExpression("ADD #count :i"),
+			option.UpdateExpression("ADD #count :i REMOVE #role"),
 		)
 		if err != nil {
 			t.Error(err)
