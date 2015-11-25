@@ -23,6 +23,18 @@ func Index(indexName string) QueryInput {
 	}
 }
 
+// Reverse sets ScanIndexForward false in dynamodb.QueryInput.
+//
+// If ScanIndexForward is true, DynamoDB returns the results in ascending order, by range key.
+// This is the default behavior.
+//
+// If ScanIndexForward is false, DynamoDB returns the results in descending order, by range key.
+func Reverse() QueryInput {
+	return func(req *dynamodb.QueryInput) {
+		req.ScanIndexForward = aws.Bool(false)
+	}
+}
+
 // QueryConsistentRead enables consistent read in dynamodb.QueryInput.
 func QueryConsistentRead() QueryInput {
 	return func(req *dynamodb.QueryInput) {
