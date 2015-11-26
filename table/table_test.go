@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/nabeken/aws-go-dynamodb/attributes"
@@ -54,7 +55,7 @@ func TestTable(t *testing.T) {
 
 	assert := assert.New(t)
 
-	dtable := New(dynamodb.New(nil), name).
+	dtable := New(dynamodb.New(session.New()), name).
 		WithHashKey("user_id", "S").
 		WithRangeKey("date", "N")
 
