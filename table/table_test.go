@@ -219,6 +219,23 @@ func TestTable(t *testing.T) {
 		}
 	}
 
+	// Query the items with ExclusiveStartKey but it causes an error
+	{
+		var actualItems []TestItem
+		_, err := dtable.Query(
+			&actualItems,
+			option.QueryExpressionAttributeValue(":hashval", hashKey),
+			option.QueryKeyConditionExpression("user_id = :hashval"),
+			option.ExclusiveStartKey("THIS IS NOT A MAP"),
+		)
+		assert.Error(err)
+
+		awsErr, ok := err.(awserr.Error)
+		if assert.True(ok, "err must be awserr.Error") {
+			assert.Equal("SerializationError", awsErr.Code())
+		}
+	}
+
 	// Delete the item with the conditon but it should fail
 	{
 		err := dtable.DeleteItem(
