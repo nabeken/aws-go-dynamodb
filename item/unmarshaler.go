@@ -8,3 +8,8 @@ import "github.com/aws/aws-sdk-go/service/dynamodb"
 type Unmarshaler interface {
 	UnmarshalItem(map[string]*dynamodb.AttributeValue) error
 }
+
+// Marshaler is an interface to marshal items.
+type Marshaler interface {
+	MarshalItem() (map[string]*dynamodb.AttributeValue, error)
+}

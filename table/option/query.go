@@ -3,6 +3,8 @@ package option
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/nabeken/aws-go-dynamodb/item"
 )
 
 // The QueryInput type is an adapter to change a parameter in
@@ -39,6 +41,22 @@ func Reverse() QueryInput {
 func QueryConsistentRead() QueryInput {
 	return func(req *dynamodb.QueryInput) {
 		req.ConsistentRead = aws.Bool(true)
+	}
+}
+
+// ExclusiveStartKey sets an ExclusiveStartKey in dynamodb.QueryInput.
+func ExclusiveStartKey(v interface{}) QueryInput {
+	return func(req *dynamodb.QueryInput) {
+		var esk map[string]*dynamodb.AttributeValue
+
+		if key, ok := v.(map[string]*dynamodb.AttributeValue); ok {
+			esk = key
+		} else if marshaller, ok := v.(item.Marshaler); ok {
+			esk, _ = marshaller.MarshalItem()
+		} else {
+			esk, _ = dynamodbattribute.ConvertToMap(v)
+		}
+		req.ExclusiveStartKey = esk
 	}
 }
 
