@@ -144,7 +144,9 @@ func (t *Table) Query(slice interface{}, opts ...option.QueryInput) (map[string]
 	}
 
 	for _, f := range opts {
-		f(req)
+		if err := f(req); err != nil {
+			return nil, err
+		}
 	}
 
 	resp, err := t.DynamoDB.Query(req)

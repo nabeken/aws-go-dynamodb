@@ -47,6 +47,29 @@ func (i *TestItem) UnmarshalItem(item map[string]*dynamodb.AttributeValue) error
 	return nil
 }
 
+func (i *TestItem) PrimaryKeyMap() map[string]interface{} {
+	primaryKey := map[string]interface{}{
+		"user_id": i.UserID,
+		"date":    i.Date,
+	}
+
+	return primaryKey
+}
+
+func (i *TestItem) PrimaryKey() map[string]*dynamodb.AttributeValue {
+	primaryKey := i.PrimaryKeyMap()
+
+	item, _ := dynamodbattribute.ConvertToMap(primaryKey)
+
+	return item
+}
+
+// MarshalItem implements ItemMarshaler interface.
+func (i *TestItem) MarshalItem() (map[string]*dynamodb.AttributeValue, error) {
+	item := i.PrimaryKey()
+	return item, nil
+}
+
 func TestTable(t *testing.T) {
 	name := os.Getenv("TEST_DYNAMODB_TABLE_NAME")
 	if len(name) == 0 {
@@ -62,7 +85,7 @@ func TestTable(t *testing.T) {
 	now := time.Now()
 
 	items := []TestItem{
-		{
+		TestItem{
 			UserID: "foobar-1",
 			Date:   now.Unix(),
 			Status: "waiting",
@@ -170,6 +193,47 @@ func TestTable(t *testing.T) {
 
 		// default is ascending order
 		assert.Equal(items, actualItems)
+	}
+
+	// Query the items with ExclusiveStartKey
+	{
+		esks := []interface{}{
+			items[0].PrimaryKey(),
+			&items[0],
+			items[0].PrimaryKeyMap(),
+		}
+		for _, esk := range esks {
+			var actualItems []TestItem
+			lastEvaluatedKey, err := dtable.Query(
+				&actualItems,
+				option.QueryExpressionAttributeValue(":hashval", hashKey),
+				option.QueryKeyConditionExpression("user_id = :hashval"),
+				option.ExclusiveStartKey(esk),
+			)
+
+			assert.NoError(err)
+			assert.Nil(lastEvaluatedKey)
+			if assert.Len(actualItems, 1) {
+				assert.Equal(items[1], actualItems[0])
+			}
+		}
+	}
+
+	// Query the items with ExclusiveStartKey but it causes an error
+	{
+		var actualItems []TestItem
+		_, err := dtable.Query(
+			&actualItems,
+			option.QueryExpressionAttributeValue(":hashval", hashKey),
+			option.QueryKeyConditionExpression("user_id = :hashval"),
+			option.ExclusiveStartKey("THIS IS NOT A MAP"),
+		)
+		assert.Error(err)
+
+		awsErr, ok := err.(awserr.Error)
+		if assert.True(ok, "err must be awserr.Error") {
+			assert.Equal("SerializationError", awsErr.Code())
+		}
 	}
 
 	// Delete the item with the conditon but it should fail
