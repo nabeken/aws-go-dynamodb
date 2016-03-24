@@ -236,6 +236,27 @@ func TestTable(t *testing.T) {
 		}
 	}
 
+	// Query the items with ProjectionExpression
+	{
+		var actualItems []TestItem
+		_, err := dtable.Query(
+			&actualItems,
+			option.QueryExpressionAttributeValue(":hashval", hashKey),
+			option.QueryKeyConditionExpression("user_id = :hashval"),
+			option.ProjectionExpression("user_id"),
+		)
+		assert.NoError(err)
+		assert.Len(actualItems, 2)
+
+		expectedItems := []TestItem{}
+		for _, i := range items {
+			expectedItems = append(expectedItems, TestItem{
+				UserID: i.UserID,
+			})
+		}
+		assert.Equal(expectedItems, actualItems)
+	}
+
 	// Delete the item with the conditon but it should fail
 	{
 		err := dtable.DeleteItem(
