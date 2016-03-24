@@ -27,6 +27,14 @@ func Index(indexName string) QueryInput {
 	}
 }
 
+// ProjectionExpression sets ProjectionExpression in dynamodb.QueryInput.
+func ProjectionExpression(e string) QueryInput {
+	return func(req *dynamodb.QueryInput) error {
+		req.ProjectionExpression = aws.String(e)
+		return nil
+	}
+}
+
 // Reverse sets ScanIndexForward false in dynamodb.QueryInput.
 //
 // If ScanIndexForward is true, DynamoDB returns the results in ascending order, by range key.
