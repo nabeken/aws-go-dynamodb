@@ -1,6 +1,8 @@
 package table
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"os"
 	"sort"
 	"testing"
@@ -18,6 +20,7 @@ import (
 type TestItem struct {
 	UserID     string   `json:"user_id"`
 	Date       int64    `json:"date"`
+	Password   string   `json:"password"`
 	Status     string   `json:"status"`
 	LoginCount int      `json:"login_count"`
 	Role       []string `json:"role"`
@@ -64,10 +67,37 @@ func (i *TestItem) PrimaryKey() map[string]*dynamodb.AttributeValue {
 	return item
 }
 
+func (i *TestItem) IsStartKey() bool {
+	if i.UserID != "" && i.Date != 0 &&
+		i.Password == "" && i.Status == "" && i.LoginCount == 0 && len(i.Role) == 0 {
+		return true
+	}
+	return false
+}
+
+func hashedPassword(password string) string {
+	salt := "THIS VALUE IS SECRET"
+	hasher := sha256.New()
+	hasher.Write([]byte(password + salt))
+	return base64.URLEncoding.EncodeToString(hasher.Sum(nil))
+}
+
 // MarshalItem implements ItemMarshaler interface.
-func (i *TestItem) MarshalItem() (map[string]*dynamodb.AttributeValue, error) {
-	item := i.PrimaryKey()
-	return item, nil
+func (i TestItem) MarshalItem() (map[string]*dynamodb.AttributeValue, error) {
+	if i.IsStartKey() {
+		item := i.PrimaryKey()
+		return item, nil
+	}
+
+	itemMapped, err := dynamodbattribute.ConvertToMap(i)
+	if err != nil {
+		return nil, err
+	}
+	if i.Password != "" {
+		itemMapped["password"] = attributes.String(hashedPassword(i.Password))
+	}
+
+	return itemMapped, nil
 }
 
 func TestTable(t *testing.T) {
@@ -86,14 +116,16 @@ func TestTable(t *testing.T) {
 
 	items := []TestItem{
 		TestItem{
-			UserID: "foobar-1",
-			Date:   now.Unix(),
-			Status: "waiting",
+			UserID:   "foobar-1",
+			Date:     now.Unix(),
+			Status:   "waiting",
+			Password: "hogehoge",
 		},
 		TestItem{
-			UserID: "foobar-1",
-			Date:   now.Add(1 * time.Minute).Unix(),
-			Status: "waiting",
+			UserID:   "foobar-1",
+			Date:     now.Add(1 * time.Minute).Unix(),
+			Status:   "waiting",
+			Password: "fugafuga",
 		},
 	}
 
@@ -192,14 +224,23 @@ func TestTable(t *testing.T) {
 		assert.Len(actualItems, 2)
 
 		// default is ascending order
-		assert.Equal(items, actualItems)
+		for i := range actualItems {
+			sort.Strings(actualItems[i].Role)
+
+			assert.Equal(items[i].Status, actualItems[i].Status)
+			assert.Equal(items[i].LoginCount, actualItems[i].LoginCount)
+			assert.Equal(items[i].Role, actualItems[i].Role)
+		}
 	}
 
 	// Query the items with ExclusiveStartKey
 	{
 		esks := []interface{}{
 			items[0].PrimaryKey(),
-			&items[0],
+			&TestItem{
+				UserID: items[0].UserID,
+				Date:   items[0].Date,
+			},
 			items[0].PrimaryKeyMap(),
 		}
 		for _, esk := range esks {
@@ -214,7 +255,13 @@ func TestTable(t *testing.T) {
 			assert.NoError(err)
 			assert.Nil(lastEvaluatedKey)
 			if assert.Len(actualItems, 1) {
-				assert.Equal(items[1], actualItems[0])
+				for i := range actualItems {
+					sort.Strings(actualItems[i].Role)
+
+					assert.Equal(items[i].Status, actualItems[i].Status)
+					assert.Equal(items[i].LoginCount, actualItems[i].LoginCount)
+					assert.Equal(items[i].Role, actualItems[i].Role)
+				}
 			}
 		}
 	}

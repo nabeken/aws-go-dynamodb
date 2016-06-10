@@ -57,12 +57,18 @@ func (t *Table) WithRangeKey(keyName, keyAttributeType string) *Table {
 }
 
 // PutItem puts an item on the table.
-func (t *Table) PutItem(item interface{}, opts ...option.PutItemInput) error {
+func (t *Table) PutItem(v interface{}, opts ...option.PutItemInput) error {
 	req := &dynamodb.PutItemInput{
 		TableName: t.Name,
 	}
 
-	itemMapped, err := dynamodbattribute.ConvertToMap(item)
+	var itemMapped map[string]*dynamodb.AttributeValue
+	var err error
+	if marshaller, ok := v.(item.Marshaler); ok {
+		itemMapped, err = marshaller.MarshalItem()
+	} else {
+		itemMapped, err = dynamodbattribute.ConvertToMap(v)
+	}
 	if err != nil {
 		return err
 	}
