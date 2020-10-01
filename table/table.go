@@ -84,7 +84,7 @@ func (t *Table) PutItem(v interface{}, opts ...option.PutItemInput) error {
 }
 
 // UpdateItem updates the item on the table.
-func (t *Table) UpdateItem(hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, opts ...option.UpdateItemInput) error {
+func (t *Table) UpdateItem(hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, opts ...option.UpdateItemInput) (*dynamodb.UpdateItemOutput, error) {
 	req := &dynamodb.UpdateItemInput{
 		TableName: t.Name,
 	}
@@ -102,8 +102,7 @@ func (t *Table) UpdateItem(hashKeyValue, rangeKeyValue *dynamodb.AttributeValue,
 		f(req)
 	}
 
-	_, err := t.DynamoDB.UpdateItem(req)
-	return err
+	return t.DynamoDB.UpdateItem(req)
 }
 
 // GetItem get the item from the table and convert it to v.

@@ -8,9 +8,9 @@ aws-go-dynamodb is a Amazon DynamoDB library built with [aws/aws-sdk-go](https:/
 
 ## Testing
 
-If you want to run the tests, you *SHOULD* use a decicated DynamoDB table for the tests.
+If you want to run the tests, you *SHOULD* use a dedicated DynamoDB table for the tests.
 
-You can specify the table name in environment variable.
+You can specify the table name in an environment variable.
 
 ```sh
 $ cd table
