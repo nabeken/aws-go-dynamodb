@@ -8,9 +8,7 @@ aws-go-dynamodb is a Amazon DynamoDB library built with [aws/aws-sdk-go](https:/
 
 ## Testing
 
-If you want to run the tests, you *SHOULD* use a dedicated DynamoDB table for the tests.
-
-You can specify the table name in an environment variable.
+The tests will run on DynamoDB Local running on `tcp/18000`. Docker helps you to launch it on your local.
 
 ```sh
 $ docker pull amazon/dynamodb-local:latest
