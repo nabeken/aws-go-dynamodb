@@ -3,18 +3,21 @@ package table
 import (
 	"crypto/sha256"
 	"encoding/base64"
-	"os"
+	"fmt"
 	"sort"
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/nabeken/aws-go-dynamodb/attributes"
 	"github.com/nabeken/aws-go-dynamodb/table/option"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type TestItem struct {
@@ -100,28 +103,70 @@ func (i TestItem) MarshalItem() (map[string]*dynamodb.AttributeValue, error) {
 	return itemMapped, nil
 }
 
+func newDynamoDBLocalClient() *dynamodb.DynamoDB {
+	conf := aws.NewConfig().
+		WithCredentials(credentials.NewStaticCredentials("AWS_GO_DDB_TESTING", "dummy", "")).
+		WithEndpoint("http://127.0.0.1:18000")
+	return dynamodb.New(session.New(conf))
+}
+
 func TestTable(t *testing.T) {
-	name := os.Getenv("TEST_DYNAMODB_TABLE_NAME")
-	if len(name) == 0 {
-		t.Skip("TEST_DYNAMODB_TABLE_NAME must be set")
-	}
+	var tableName = fmt.Sprintf("aws-go-dynamodb-testing-%d", time.Now().Unix())
 
 	assert := assert.New(t)
+	require := require.New(t)
 
-	dtable := New(dynamodb.New(session.New()), name).
+	ddbc := newDynamoDBLocalClient()
+
+	t.Logf("Creating a table '%s' on DynamoDB Local...", tableName)
+
+	_, err := ddbc.CreateTable(&dynamodb.CreateTableInput{
+		TableName: &tableName,
+		ProvisionedThroughput: &dynamodb.ProvisionedThroughput{
+			ReadCapacityUnits:  aws.Int64(1),
+			WriteCapacityUnits: aws.Int64(1),
+		},
+		AttributeDefinitions: []*dynamodb.AttributeDefinition{
+			{
+				AttributeName: aws.String("user_id"),
+				AttributeType: aws.String("S"),
+			},
+			{
+				AttributeName: aws.String("date"),
+				AttributeType: aws.String("N"),
+			},
+		},
+		KeySchema: []*dynamodb.KeySchemaElement{
+			{
+				AttributeName: aws.String("user_id"),
+				KeyType:       aws.String("HASH"),
+			},
+			{
+				AttributeName: aws.String("date"),
+				KeyType:       aws.String("RAANGE"),
+			},
+		},
+	})
+	require.NoError(err)
+
+	require.NoError(ddbc.WaitUntilTableExists(&dynamodb.DescribeTableInput{
+		TableName: &tableName,
+	}))
+
+	dtable := New(ddbc, tableName).
 		WithHashKey("user_id", "S").
 		WithRangeKey("date", "N")
 
 	now := time.Now()
 
 	items := []TestItem{
-		TestItem{
+		{
 			UserID:   "foobar-1",
 			Date:     now.Unix(),
 			Status:   "waiting",
 			Password: "hogehoge",
 		},
-		TestItem{
+		{
 			UserID:   "foobar-1",
 			Date:     now.Add(1 * time.Minute).Unix(),
 			Status:   "waiting",

@@ -1,3 +1,6 @@
+services:
+  - docker
+
 sudo: false
 language: go
 
@@ -6,11 +9,13 @@ go:
 
 before_script:
   - go get golang.org/x/lint/golint
+  - docker pull amazon/dynamodb-local:latest
+  - docker run -d -p 18000:8000 amazon/dynamodb-local:latest
 
 script:
   - go build ./...
   - golint ./...
-  - go test -short -v ./...
+  - AWS_REGION=local go test -v ./...
 
 after_script:
   - F=$(go fmt ./...); if [ ! -z "$F" ]; then echo "Please gofmt for"$'\n'"$F"; exit 1; fi

@@ -13,7 +13,9 @@ If you want to run the tests, you *SHOULD* use a dedicated DynamoDB table for th
 You can specify the table name in an environment variable.
 
 ```sh
+$ docker pull amazon/dynamodb-local:latest
+$ docker run --name aws-go-dynamodb -d -p 18000:8000 amazon/dynamodb-local:latest
 $ cd table
-$ export TEST_DYNAMODB_TABLE_NAME=aws-go-dynamodb-test
 $ go test -v
+$ docker rm -f aws-go-dynamodb
 ```
