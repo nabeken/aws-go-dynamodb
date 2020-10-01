@@ -168,7 +168,7 @@ func TestTable(t *testing.T) {
 
 	// Update the item with incrementing counter and setting role as StringSet
 	{
-		err := dtable.UpdateItem(
+		_, err := dtable.UpdateItem(
 			hashKey,
 			rangeKey,
 			option.UpdateExpressionAttributeName("login_count", "#count"),
@@ -197,7 +197,7 @@ func TestTable(t *testing.T) {
 
 	// Update the item with decrementing counter and removing role
 	{
-		err := dtable.UpdateItem(
+		_, err := dtable.UpdateItem(
 			hashKey,
 			rangeKey,
 			option.UpdateExpressionAttributeName("login_count", "#count"),

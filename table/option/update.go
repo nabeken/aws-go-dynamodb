@@ -42,3 +42,11 @@ func UpdateExpressionAttributeValue(placeholder string, value *dynamodb.Attribut
 		req.ExpressionAttributeValues[placeholder] = value
 	}
 }
+
+// UpdateReturnValues sets the attributes to return in  dynamodb.UpdateItemOutput.
+// Default is dynamodb.ReturnValueNone.
+func UpdateReturnValues(returnValue string) UpdateItemInput {
+	return func(req *dynamodb.UpdateItemInput) {
+		req.ReturnValues = aws.String(returnValue)
+	}
+}
