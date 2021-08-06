@@ -29,3 +29,10 @@ func Number(v int64) *dynamodb.AttributeValue {
 		N: &n,
 	}
 }
+
+// Binary returns dynamodb.AttributeValue for Binary.
+func Binary(b []byte) *dynamodb.AttributeValue {
+	return &dynamodb.AttributeValue{
+		B: b,
+	}
+}
