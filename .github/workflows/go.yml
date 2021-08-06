@@ -11,6 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+    - name: Setup DynamoDB Local
+      uses: rrainn/dynamodb-action@v2.0.0
+      with:
+        port: 18000
+        cors: '*'
+
     - name: Set up Go 1.16
       uses: actions/setup-go@v1
       with:
@@ -29,3 +35,5 @@ jobs:
 
     - name: Test
       run: go test -v -cover ./...
+      env:
+        AWS_REGION: local
