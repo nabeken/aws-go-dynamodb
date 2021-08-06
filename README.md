@@ -1,7 +1,7 @@
 # aws-go-dynamodb
 
-[![GoDoc](http://img.shields.io/badge/godoc-reference-blue.svg)](http://godoc.org/github.com/nabeken/aws-go-dynamodb/table)
-[![Build Status](https://img.shields.io/travis/nabeken/aws-go-dynamodb/master.svg)](https://travis-ci.org/nabeken/aws-go-dynamodb)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/nabeken/aws-go-dynamodb)](https://pkg.go.dev/github.com/nabeken/aws-go-dynamodb)
+[![Go](https://github.com/nabeken/aws-go-dynamodb/actions/workflows/go.yml/badge.svg)](https://github.com/nabeken/aws-go-dynamodb/actions/workflows/go.yml)
 [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/nabeken/aws-go-dynamodb/blob/master/LICENSE)
 
 aws-go-dynamodb is a Amazon DynamoDB library built with [aws/aws-sdk-go](https://github.com/aws/aws-sdk-go).
