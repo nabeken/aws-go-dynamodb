@@ -143,7 +143,7 @@ func TestTable(t *testing.T) {
 			},
 			{
 				AttributeName: aws.String("date"),
-				KeyType:       aws.String("RAANGE"),
+				KeyType:       aws.String("RANGE"),
 			},
 		},
 	})
