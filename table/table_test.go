@@ -143,7 +143,7 @@ func TestTable(t *testing.T) {
 			},
 			{
 				AttributeName: aws.String("date"),
-				KeyType:       aws.String("RAANGE"),
+				KeyType:       aws.String("RANGE"),
 			},
 		},
 	})
@@ -196,7 +196,7 @@ func TestTable(t *testing.T) {
 		}
 	}
 
-	// Add conditon and it should fail
+	// Add condition and it should fail
 	{
 		err := dtable.PutItem(
 			items[0],
@@ -373,7 +373,7 @@ func TestTable(t *testing.T) {
 		}
 	}
 
-	// Delete the item with the conditon and it should succeed
+	// Delete the item with the condition and it should succeed
 	{
 		for _, item := range items {
 			hk := attributes.String(item.UserID)

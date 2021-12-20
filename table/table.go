@@ -44,8 +44,8 @@ func New(d dynamodbiface.DynamoDBAPI, name string) *Table {
 
 // WithHashKey specifies HASH key for the table. keyType must be "S", "N", or "B".
 // See http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_AttributeDefinition.html
-func (t *Table) WithHashKey(keyName, keyAttribyteType string) *Table {
-	t.hashKey = primaryKey(keyName, keyAttribyteType, dynamodb.KeyTypeHash)
+func (t *Table) WithHashKey(keyName, keyAttributeType string) *Table {
+	t.hashKey = primaryKey(keyName, keyAttributeType, dynamodb.KeyTypeHash)
 	return t
 }
 
