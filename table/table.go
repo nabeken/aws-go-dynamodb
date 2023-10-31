@@ -2,6 +2,7 @@
 package table
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -56,8 +57,13 @@ func (t *Table) WithRangeKey(keyName, keyAttributeType string) *Table {
 	return t
 }
 
-// PutItem puts an item on the table.
+// PutItem wraps PutItemWithContext using context.Background.
 func (t *Table) PutItem(v interface{}, opts ...option.PutItemInput) error {
+	return t.PutItemWithContext(context.Background(), v, opts...)
+}
+
+// PutItemWithContext puts an item on the table.
+func (t *Table) PutItemWithContext(ctx context.Context, v interface{}, opts ...option.PutItemInput) error {
 	req := &dynamodb.PutItemInput{
 		TableName: t.Name,
 	}
@@ -79,12 +85,17 @@ func (t *Table) PutItem(v interface{}, opts ...option.PutItemInput) error {
 		f(req)
 	}
 
-	_, err = t.DynamoDB.PutItem(req)
+	_, err = t.DynamoDB.PutItemWithContext(ctx, req)
 	return err
 }
 
-// UpdateItem updates the item on the table.
+// UpdateItem wraps UpdateItemWithContext using context.Background.
 func (t *Table) UpdateItem(hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, opts ...option.UpdateItemInput) (*dynamodb.UpdateItemOutput, error) {
+	return t.UpdateItemWithContext(context.Background(), hashKeyValue, rangeKeyValue, opts...)
+}
+
+// UpdateItemWithContext updates the item on the table.
+func (t *Table) UpdateItemWithContext(ctx context.Context, hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, opts ...option.UpdateItemInput) (*dynamodb.UpdateItemOutput, error) {
 	req := &dynamodb.UpdateItemInput{
 		TableName: t.Name,
 	}
@@ -102,11 +113,16 @@ func (t *Table) UpdateItem(hashKeyValue, rangeKeyValue *dynamodb.AttributeValue,
 		f(req)
 	}
 
-	return t.DynamoDB.UpdateItem(req)
+	return t.DynamoDB.UpdateItemWithContext(ctx, req)
 }
 
-// GetItem get the item from the table and convert it to v.
+// GetItem wraps GetItemWithContext using context.Background.
 func (t *Table) GetItem(hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, v interface{}, opts ...option.GetItemInput) error {
+	return t.GetItemWithContext(context.Background(), hashKeyValue, rangeKeyValue, v, opts...)
+}
+
+// GetItemWithContext get the item from the table and convert it to v.
+func (t *Table) GetItemWithContext(ctx context.Context, hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, v interface{}, opts ...option.GetItemInput) error {
 	req := &dynamodb.GetItemInput{
 		TableName: t.Name,
 	}
@@ -124,7 +140,7 @@ func (t *Table) GetItem(hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, v 
 		f(req)
 	}
 
-	resp, err := t.DynamoDB.GetItem(req)
+	resp, err := t.DynamoDB.GetItemWithContext(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -141,9 +157,14 @@ func (t *Table) GetItem(hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, v 
 	return dynamodbattribute.ConvertFromMap(resp.Item, v)
 }
 
-// Query queries items to the table and convert it to v. v must be a slice of struct.
-// If the Query operation does not return the last page, LastEvaluatedKey will be returned.
+// Query wraps QueryWithContext using context.Background.
 func (t *Table) Query(slice interface{}, opts ...option.QueryInput) (map[string]*dynamodb.AttributeValue, error) {
+	return t.QueryWithContext(context.Background(), slice, opts...)
+}
+
+// QueryWithContext queries items to the table and convert it to v. v must be a slice of struct.
+// If the Query operation does not return the last page, LastEvaluatedKey will be returned.
+func (t *Table) QueryWithContext(ctx context.Context, slice interface{}, opts ...option.QueryInput) (map[string]*dynamodb.AttributeValue, error) {
 	req := &dynamodb.QueryInput{
 		TableName: t.Name,
 	}
@@ -154,7 +175,7 @@ func (t *Table) Query(slice interface{}, opts ...option.QueryInput) (map[string]
 		}
 	}
 
-	resp, err := t.DynamoDB.Query(req)
+	resp, err := t.DynamoDB.QueryWithContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -187,8 +208,13 @@ func (t *Table) Query(slice interface{}, opts ...option.QueryInput) (map[string]
 	return resp.LastEvaluatedKey, nil
 }
 
-// DeleteItem deletes the item in the table.
+// DeleteItem wraps DeleteItemWithContext using context.Background.
 func (t *Table) DeleteItem(hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, opts ...option.DeleteItemInput) error {
+	return t.DeleteItemWithContext(context.Background(), hashKeyValue, rangeKeyValue, opts...)
+}
+
+// DeleteItemWithContext deletes the item in the table.
+func (t *Table) DeleteItemWithContext(ctx context.Context, hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, opts ...option.DeleteItemInput) error {
 	req := &dynamodb.DeleteItemInput{
 		TableName: t.Name,
 	}
@@ -206,7 +232,7 @@ func (t *Table) DeleteItem(hashKeyValue, rangeKeyValue *dynamodb.AttributeValue,
 		f(req)
 	}
 
-	_, err := t.DynamoDB.DeleteItem(req)
+	_, err := t.DynamoDB.DeleteItemWithContext(ctx, req)
 	return err
 }
 
