@@ -19,7 +19,7 @@ jobs:
     - name: Setup DynamoDB Local
       uses: rrainn/dynamodb-action@v3.0.0
       with:
-        port: 18000
+        port: '8000'
         cors: '*'
 
     - name: Set up Go

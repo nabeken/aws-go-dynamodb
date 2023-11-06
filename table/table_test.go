@@ -105,8 +105,8 @@ func (i TestItem) MarshalItem() (map[string]*dynamodb.AttributeValue, error) {
 
 func newDynamoDBLocalClient() *dynamodb.DynamoDB {
 	conf := aws.NewConfig().
-		WithCredentials(credentials.NewStaticCredentials("AWS_GO_DDB_TESTING", "dummy", "")).
-		WithEndpoint("http://127.0.0.1:18000")
+		WithCredentials(credentials.NewStaticCredentials("AWSGODDBTESTING", "dummy", "")).
+		WithEndpoint("http://127.0.0.1:8000")
 	return dynamodb.New(session.New(conf))
 }
 
