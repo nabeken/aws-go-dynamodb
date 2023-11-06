@@ -17,7 +17,7 @@ jobs:
     steps:
 
     - name: Setup DynamoDB Local
-      uses: rrainn/dynamodb-action@v3.0.0
+      uses: rrainn/dynamodb-action@a839324dce7bae1fafac6a62922e37675c6caf23 # v3.0.0
       with:
         port: '8000'
         cors: '*'
