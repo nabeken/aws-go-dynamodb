@@ -24,5 +24,4 @@ jobs:
       - uses: google-github-actions/release-please-action@a6d1fd9854c8c40688a72f7e4b072a1e965860a0 # v4
         with:
           release-type: go
-          package-name: aws-go-dynamodb
           token: ${{ steps.go-github-apps.outputs.app_github_token }}
