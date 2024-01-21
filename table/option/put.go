@@ -1,8 +1,8 @@
 package option
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 // The PutItemInput type is an adapter to change a parameter in
@@ -10,28 +10,25 @@ import (
 type PutItemInput func(req *dynamodb.PutItemInput)
 
 // PutCondition sets a condition expression in dynamodb.PutItemInput.
-func PutCondition(cond string) PutItemInput {
+// You should use `aws-sdk-go-v2/feature/dynamodb/expression` package to build cond.
+func PutCondition(cond *string) PutItemInput {
 	return func(req *dynamodb.PutItemInput) {
-		req.ConditionExpression = aws.String(cond)
+		req.ConditionExpression = cond
 	}
 }
 
-// PutExpressionAttributeName sets an ExpressionAttributeNames in dynamodb.PutItemInput.
-func PutExpressionAttributeName(key, placeholder string) PutItemInput {
+// PutExpressionAttributeNames sets an ExpressionAttributeNames in dynamodb.PutItemInput.
+// You should use `aws-sdk-go-v2/feature/dynamodb/expression` package to build names.
+func PutExpressionAttributeNames(names map[string]string) PutItemInput {
 	return func(req *dynamodb.PutItemInput) {
-		if req.ExpressionAttributeNames == nil {
-			req.ExpressionAttributeNames = make(map[string]*string)
-		}
-		req.ExpressionAttributeNames[placeholder] = aws.String(key)
+		req.ExpressionAttributeNames = names
 	}
 }
 
-// PutExpressionAttributeValue sets an ExpressionAttributeValues in dynamodb.PutItemInput.
-func PutExpressionAttributeValue(placeholder string, value *dynamodb.AttributeValue) PutItemInput {
+// PutExpressionAttributeValues sets an ExpressionAttributeValues in dynamodb.PutItemInput.
+// You should use `aws-sdk-go-v2/feature/dynamodb/expression` package to build values.
+func PutExpressionAttributeValues(values map[string]types.AttributeValue) PutItemInput {
 	return func(req *dynamodb.PutItemInput) {
-		if req.ExpressionAttributeValues == nil {
-			req.ExpressionAttributeValues = make(map[string]*dynamodb.AttributeValue)
-		}
-		req.ExpressionAttributeValues[placeholder] = value
+		req.ExpressionAttributeValues = values
 	}
 }

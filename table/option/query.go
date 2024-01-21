@@ -1,37 +1,34 @@
 package option
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/nabeken/aws-go-dynamodb/v2/item"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 // The QueryInput type is an adapter to change a parameter in
 // dynamodb.QueryInput
-type QueryInput func(req *dynamodb.QueryInput) error
+type QueryInput func(req *dynamodb.QueryInput)
 
 // Limit sets limit parameter in dynamodb.QueryInput.
-func Limit(limit int64) QueryInput {
-	return func(req *dynamodb.QueryInput) error {
-		req.Limit = aws.Int64(limit)
-		return nil
+func Limit(limit int32) QueryInput {
+	return func(req *dynamodb.QueryInput) {
+		req.Limit = aws.Int32(limit)
 	}
 }
 
 // Index sets an index name in dynamodb.QueryInput.
 func Index(indexName string) QueryInput {
-	return func(req *dynamodb.QueryInput) error {
+	return func(req *dynamodb.QueryInput) {
 		req.IndexName = aws.String(indexName)
-		return nil
 	}
 }
 
 // ProjectionExpression sets ProjectionExpression in dynamodb.QueryInput.
-func ProjectionExpression(e string) QueryInput {
-	return func(req *dynamodb.QueryInput) error {
-		req.ProjectionExpression = aws.String(e)
-		return nil
+// You should use `aws-sdk-go-v2/feature/dynamodb/expression` package to build expression.
+func ProjectionExpression(expression *string) QueryInput {
+	return func(req *dynamodb.QueryInput) {
+		req.ProjectionExpression = expression
 	}
 }
 
@@ -42,77 +39,54 @@ func ProjectionExpression(e string) QueryInput {
 //
 // If ScanIndexForward is false, DynamoDB returns the results in descending order, by range key.
 func Reverse() QueryInput {
-	return func(req *dynamodb.QueryInput) error {
+	return func(req *dynamodb.QueryInput) {
 		req.ScanIndexForward = aws.Bool(false)
-		return nil
 	}
 }
 
 // QueryConsistentRead enables consistent read in dynamodb.QueryInput.
 func QueryConsistentRead() QueryInput {
-	return func(req *dynamodb.QueryInput) error {
+	return func(req *dynamodb.QueryInput) {
 		req.ConsistentRead = aws.Bool(true)
-		return nil
 	}
 }
 
 // ExclusiveStartKey sets an ExclusiveStartKey in dynamodb.QueryInput.
-func ExclusiveStartKey(v interface{}) QueryInput {
-	return func(req *dynamodb.QueryInput) error {
-		var err error
-		var esk map[string]*dynamodb.AttributeValue
-
-		if key, ok := v.(map[string]*dynamodb.AttributeValue); ok {
-			esk = key
-		} else if marshaller, ok := v.(item.Marshaler); ok {
-			esk, err = marshaller.MarshalItem()
-		} else {
-			esk, err = dynamodbattribute.ConvertToMap(v)
-		}
-
-		if err != nil {
-			return err
-		}
-
+// You can build esk with attributevalue.Marshal functon.
+func ExclusiveStartKey(esk map[string]types.AttributeValue) QueryInput {
+	return func(req *dynamodb.QueryInput) {
 		req.ExclusiveStartKey = esk
-		return nil
 	}
 }
 
-// QueryExpressionAttributeName sets an ExpressionAttributeNames in dynamodb.QueryInput.
-func QueryExpressionAttributeName(key, placeholder string) QueryInput {
-	return func(req *dynamodb.QueryInput) error {
-		if req.ExpressionAttributeNames == nil {
-			req.ExpressionAttributeNames = make(map[string]*string)
-		}
-		req.ExpressionAttributeNames[placeholder] = aws.String(key)
-		return nil
+// QueryExpressionAttributeNames sets an ExpressionAttributeNames in dynamodb.QueryInput.
+// You should use `aws-sdk-go-v2/feature/dynamodb/expression` package to build names.
+func QueryExpressionAttributeNames(names map[string]string) QueryInput {
+	return func(req *dynamodb.QueryInput) {
+		req.ExpressionAttributeNames = names
 	}
 }
 
-// QueryExpressionAttributeValue sets an ExpressionAttributeValues in dynamodb.QueryInput.
-func QueryExpressionAttributeValue(placeholder string, value *dynamodb.AttributeValue) QueryInput {
-	return func(req *dynamodb.QueryInput) error {
-		if req.ExpressionAttributeValues == nil {
-			req.ExpressionAttributeValues = make(map[string]*dynamodb.AttributeValue)
-		}
-		req.ExpressionAttributeValues[placeholder] = value
-		return nil
+// You should use `aws-sdk-go-v2/feature/dynamodb/expression` package to build names.
+// QueryExpressionAttributeValues sets an ExpressionAttributeValues in dynamodb.QueryInput.
+func QueryExpressionAttributeValues(values map[string]types.AttributeValue) QueryInput {
+	return func(req *dynamodb.QueryInput) {
+		req.ExpressionAttributeValues = values
 	}
 }
 
 // QueryFilterExpression sets FilterExpression in dynamodb.QueryInput.
-func QueryFilterExpression(expression string) QueryInput {
-	return func(req *dynamodb.QueryInput) error {
-		req.FilterExpression = aws.String(expression)
-		return nil
+// You should use `aws-sdk-go-v2/feature/dynamodb/expression` package to build expression.
+func QueryFilterExpression(expression *string) QueryInput {
+	return func(req *dynamodb.QueryInput) {
+		req.FilterExpression = expression
 	}
 }
 
 // QueryKeyConditionExpression sets KeyConditionExpression in dynamodb.QueryInput.
-func QueryKeyConditionExpression(expression string) QueryInput {
-	return func(req *dynamodb.QueryInput) error {
-		req.KeyConditionExpression = aws.String(expression)
-		return nil
+// You should use `aws-sdk-go-v2/feature/dynamodb/expression` package to build expression.
+func QueryKeyConditionExpression(expression *string) QueryInput {
+	return func(req *dynamodb.QueryInput) {
+		req.KeyConditionExpression = expression
 	}
 }

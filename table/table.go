@@ -4,14 +4,11 @@ package table
 import (
 	"context"
 	"errors"
-	"fmt"
-	"reflect"
 
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
-	"github.com/nabeken/aws-go-dynamodb/v2/item"
 	"github.com/nabeken/aws-go-dynamodb/v2/table/option"
 )
 
@@ -20,13 +17,13 @@ var ErrItemNotFound = errors.New("dynamodb: item not found")
 
 // PrimaryKey represents primary key such as HASH and RANGE in DynamoDB.
 type PrimaryKey struct {
-	dynamodb.AttributeDefinition
-	dynamodb.KeySchemaElement
+	types.AttributeDefinition
+	types.KeySchemaElement
 }
 
 // A Table represents a DynamoDB table.
 type Table struct {
-	DynamoDB dynamodbiface.DynamoDBAPI
+	DynamoDB *dynamodb.Client
 	Name     *string
 
 	hashKey  *PrimaryKey
@@ -34,9 +31,9 @@ type Table struct {
 }
 
 // New returns Table instance with table name name and schema.
-func New(d dynamodbiface.DynamoDBAPI, name string) *Table {
+func New(ddbc *dynamodb.Client, name string) *Table {
 	t := &Table{
-		DynamoDB: d,
+		DynamoDB: ddbc,
 		Name:     aws.String(name),
 	}
 
@@ -45,36 +42,26 @@ func New(d dynamodbiface.DynamoDBAPI, name string) *Table {
 
 // WithHashKey specifies HASH key for the table. keyType must be "S", "N", or "B".
 // See http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_AttributeDefinition.html
-func (t *Table) WithHashKey(keyName, keyAttributeType string) *Table {
-	t.hashKey = primaryKey(keyName, keyAttributeType, dynamodb.KeyTypeHash)
+func (t *Table) WithHashKey(keyName string, keyAttributeType types.ScalarAttributeType) *Table {
+	t.hashKey = primaryKey(keyName, keyAttributeType, types.KeyTypeHash)
 	return t
 }
 
 // WithRangeKey specifies RANGE key for the table. keyType must be "S", "N", or "B".
 // See http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_AttributeDefinition.html
-func (t *Table) WithRangeKey(keyName, keyAttributeType string) *Table {
-	t.rangeKey = primaryKey(keyName, keyAttributeType, dynamodb.KeyTypeRange)
+func (t *Table) WithRangeKey(keyName string, keyAttributeType types.ScalarAttributeType) *Table {
+	t.rangeKey = primaryKey(keyName, keyAttributeType, types.KeyTypeRange)
 	return t
 }
 
-// PutItem wraps PutItemWithContext using context.Background.
-func (t *Table) PutItem(v interface{}, opts ...option.PutItemInput) error {
-	return t.PutItemWithContext(context.Background(), v, opts...)
-}
-
-// PutItemWithContext puts an item on the table.
-func (t *Table) PutItemWithContext(ctx context.Context, v interface{}, opts ...option.PutItemInput) error {
+// PutItem puts an item on the table.
+// It invokes attributevalue.MarshalMap function to marshal v.
+func (t *Table) PutItem(ctx context.Context, v interface{}, opts ...option.PutItemInput) error {
 	req := &dynamodb.PutItemInput{
 		TableName: t.Name,
 	}
 
-	var itemMapped map[string]*dynamodb.AttributeValue
-	var err error
-	if marshaller, ok := v.(item.Marshaler); ok {
-		itemMapped, err = marshaller.MarshalItem()
-	} else {
-		itemMapped, err = dynamodbattribute.ConvertToMap(v)
-	}
+	itemMapped, err := attributevalue.MarshalMap(v)
 	if err != nil {
 		return err
 	}
@@ -85,22 +72,17 @@ func (t *Table) PutItemWithContext(ctx context.Context, v interface{}, opts ...o
 		f(req)
 	}
 
-	_, err = t.DynamoDB.PutItemWithContext(ctx, req)
+	_, err = t.DynamoDB.PutItem(ctx, req)
 	return err
 }
 
-// UpdateItem wraps UpdateItemWithContext using context.Background.
-func (t *Table) UpdateItem(hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, opts ...option.UpdateItemInput) (*dynamodb.UpdateItemOutput, error) {
-	return t.UpdateItemWithContext(context.Background(), hashKeyValue, rangeKeyValue, opts...)
-}
-
-// UpdateItemWithContext updates the item on the table.
-func (t *Table) UpdateItemWithContext(ctx context.Context, hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, opts ...option.UpdateItemInput) (*dynamodb.UpdateItemOutput, error) {
+// UpdateItem updates the item on the table.
+func (t *Table) UpdateItem(ctx context.Context, hashKeyValue, rangeKeyValue types.AttributeValue, opts ...option.UpdateItemInput) (*dynamodb.UpdateItemOutput, error) {
 	req := &dynamodb.UpdateItemInput{
 		TableName: t.Name,
 	}
 
-	key := make(map[string]*dynamodb.AttributeValue)
+	key := make(map[string]types.AttributeValue)
 	key[*t.hashKey.AttributeDefinition.AttributeName] = hashKeyValue
 
 	if t.rangeKey != nil {
@@ -113,21 +95,17 @@ func (t *Table) UpdateItemWithContext(ctx context.Context, hashKeyValue, rangeKe
 		f(req)
 	}
 
-	return t.DynamoDB.UpdateItemWithContext(ctx, req)
+	return t.DynamoDB.UpdateItem(ctx, req)
 }
 
-// GetItem wraps GetItemWithContext using context.Background.
-func (t *Table) GetItem(hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, v interface{}, opts ...option.GetItemInput) error {
-	return t.GetItemWithContext(context.Background(), hashKeyValue, rangeKeyValue, v, opts...)
-}
-
-// GetItemWithContext get the item from the table and convert it to v.
-func (t *Table) GetItemWithContext(ctx context.Context, hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, v interface{}, opts ...option.GetItemInput) error {
+// GetItem get the item from the table and convert it to v.
+// It invokes attributevalue.UnmarshalMap function to unmarshal an item into v.
+func (t *Table) GetItem(ctx context.Context, hashKeyValue, rangeKeyValue types.AttributeValue, v interface{}, opts ...option.GetItemInput) error {
 	req := &dynamodb.GetItemInput{
 		TableName: t.Name,
 	}
 
-	key := make(map[string]*dynamodb.AttributeValue)
+	key := make(map[string]types.AttributeValue)
 	key[*t.hashKey.AttributeDefinition.AttributeName] = hashKeyValue
 
 	if t.rangeKey != nil {
@@ -140,7 +118,7 @@ func (t *Table) GetItemWithContext(ctx context.Context, hashKeyValue, rangeKeyVa
 		f(req)
 	}
 
-	resp, err := t.DynamoDB.GetItemWithContext(ctx, req)
+	resp, err := t.DynamoDB.GetItem(ctx, req)
 	if err != nil {
 		return err
 	}
@@ -149,77 +127,39 @@ func (t *Table) GetItemWithContext(ctx context.Context, hashKeyValue, rangeKeyVa
 		return ErrItemNotFound
 	}
 
-	// Use ItemUnmarshaler if available
-	if unmarshaller, ok := v.(item.Unmarshaler); ok {
-		return unmarshaller.UnmarshalItem(resp.Item)
-	}
-
-	return dynamodbattribute.ConvertFromMap(resp.Item, v)
+	return attributevalue.UnmarshalMap(resp.Item, v)
 }
 
-// Query wraps QueryWithContext using context.Background.
-func (t *Table) Query(slice interface{}, opts ...option.QueryInput) (map[string]*dynamodb.AttributeValue, error) {
-	return t.QueryWithContext(context.Background(), slice, opts...)
-}
-
-// QueryWithContext queries items to the table and convert it to v. v must be a slice of struct.
+// Query queries items to the table and convert it to v. v must be a slice of struct.
 // If the Query operation does not return the last page, LastEvaluatedKey will be returned.
-func (t *Table) QueryWithContext(ctx context.Context, slice interface{}, opts ...option.QueryInput) (map[string]*dynamodb.AttributeValue, error) {
+func (t *Table) Query(ctx context.Context, slice interface{}, opts ...option.QueryInput) (map[string]types.AttributeValue, error) {
 	req := &dynamodb.QueryInput{
 		TableName: t.Name,
 	}
 
 	for _, f := range opts {
-		if err := f(req); err != nil {
-			return nil, err
-		}
+		f(req)
 	}
 
-	resp, err := t.DynamoDB.QueryWithContext(ctx, req)
+	resp, err := t.DynamoDB.Query(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	v := reflect.ValueOf(slice)
-	typ := v.Type()
-	if !(typ.Kind() == reflect.Ptr && typ.Elem().Kind() == reflect.Slice) {
-		return nil, fmt.Errorf("dynamodb: slice must be a pointer to slice but %s", typ)
+	if err := attributevalue.UnmarshalListOfMaps(resp.Items, slice); err != nil {
+		return nil, err
 	}
 
-	items := reflect.MakeSlice(typ.Elem(), 0, len(resp.Items))
-	for _, i := range resp.Items {
-		p := reflect.New(typ.Elem().Elem())
-
-		// Use ItemUnmarshaler if available
-		var err error
-		if v, ok := p.Interface().(item.Unmarshaler); ok {
-			err = v.UnmarshalItem(i)
-		} else {
-			err = dynamodbattribute.ConvertFromMap(i, p.Interface())
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		items = reflect.Append(items, p.Elem())
-	}
-
-	reflect.Indirect(v).Set(items)
 	return resp.LastEvaluatedKey, nil
 }
 
-// DeleteItem wraps DeleteItemWithContext using context.Background.
-func (t *Table) DeleteItem(hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, opts ...option.DeleteItemInput) error {
-	return t.DeleteItemWithContext(context.Background(), hashKeyValue, rangeKeyValue, opts...)
-}
-
-// DeleteItemWithContext deletes the item in the table.
-func (t *Table) DeleteItemWithContext(ctx context.Context, hashKeyValue, rangeKeyValue *dynamodb.AttributeValue, opts ...option.DeleteItemInput) error {
+// DeleteItem deletes the item in the table.
+func (t *Table) DeleteItem(ctx context.Context, hashKeyValue, rangeKeyValue types.AttributeValue, opts ...option.DeleteItemInput) error {
 	req := &dynamodb.DeleteItemInput{
 		TableName: t.Name,
 	}
 
-	key := make(map[string]*dynamodb.AttributeValue)
+	key := make(map[string]types.AttributeValue)
 	key[*t.hashKey.AttributeDefinition.AttributeName] = hashKeyValue
 
 	if t.rangeKey != nil {
@@ -232,18 +172,18 @@ func (t *Table) DeleteItemWithContext(ctx context.Context, hashKeyValue, rangeKe
 		f(req)
 	}
 
-	_, err := t.DynamoDB.DeleteItemWithContext(ctx, req)
+	_, err := t.DynamoDB.DeleteItem(ctx, req)
 	return err
 }
 
-func primaryKey(keyName, keyAttributeType, keyType string) *PrimaryKey {
-	ad := dynamodb.AttributeDefinition{
+func primaryKey(keyName string, keyAttributeType types.ScalarAttributeType, keyType types.KeyType) *PrimaryKey {
+	ad := types.AttributeDefinition{
 		AttributeName: aws.String(keyName),
-		AttributeType: aws.String(keyAttributeType),
+		AttributeType: keyAttributeType,
 	}
-	kse := dynamodb.KeySchemaElement{
+	kse := types.KeySchemaElement{
 		AttributeName: aws.String(keyName),
-		KeyType:       aws.String(keyType),
+		KeyType:       keyType,
 	}
 	return &PrimaryKey{
 		AttributeDefinition: ad,
