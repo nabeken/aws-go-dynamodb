@@ -2,32 +2,40 @@ package table_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"sort"
 	"testing"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/smithy-go"
+	"github.com/nabeken/aws-go-dynamodb/v2/attributes"
+	"github.com/nabeken/aws-go-dynamodb/v2/table"
+	"github.com/nabeken/aws-go-dynamodb/v2/table/option"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TestItem2 is a struct to demonstrate marshal and unmarshal with attributevalue for v2.
 type TestItem2 struct {
-	UserID     string   `json:"user_id"`
-	Date       int64    `json:"date"`
-	Status     string   `json:"status"`
-	LoginCount int      `json:"login_count"`
-	Role       []string `json:"role"`
+	UserID     string   `json:"user_id" dynamodbav:"user_id"`
+	Date       int64    `json:"date" dynamodbav:"date"`
+	Status     string   `json:"status" dynamodbav:"status"`
+	LoginCount int      `json:"login_count" dynamodbav:"login_count"`
+	Role       []string `json:"role" dynamodbav:"role"`
 
-	Memo []*TestItem2Memo `json:"memo"`
+	Memo []*TestItem2Memo `json:"memo" dynamodbav:"memo"`
 }
 
 type TestItem2Memo struct {
-	Name string   `json:"name"`
-	Memo string   `json:"memo"`
-	Tag  []string `json:"tag"`
+	Name string   `json:"name" dynamodbav:"name"`
+	Memo string   `json:"memo" dynamodbav:"memo"`
+	Tag  []string `json:"tag" dynamodbav:"tag"`
 }
 
 func newDynamoDBLocalClient2() *dynamodb.Client {
@@ -38,113 +46,168 @@ func newDynamoDBLocalClient2() *dynamodb.Client {
 	})
 }
 
-func TestTableV2(t *testing.T) {
+func newTestTable(t *testing.T) *table.Table {
 	var tableName = fmt.Sprintf("aws-go-dynamodb-testing-%d", time.Now().UnixNano())
-
-	//assert := assert.New(t)
-	require := require.New(t)
 
 	ddbc := newDynamoDBLocalClient2()
 
-	ctx := context.Background()
+	ctx := context.TODO()
 
-	t.Logf("Creating a table '%s' on DynamoDB Local with AWS SDK For Go V2...", tableName)
+	t.Run("Create a table", func(t *testing.T) {
+		t.Logf("Creating a table '%s' on DynamoDB Local with AWS SDK For Go V2...", tableName)
 
-	_, err := ddbc.CreateTable(ctx, &dynamodb.CreateTableInput{
-		TableName: &tableName,
-		ProvisionedThroughput: &types.ProvisionedThroughput{
-			ReadCapacityUnits:  aws.Int64(1),
-			WriteCapacityUnits: aws.Int64(1),
-		},
-		AttributeDefinitions: []types.AttributeDefinition{
-			{
-				AttributeName: aws.String("user_id"),
-				AttributeType: types.ScalarAttributeTypeS,
+		_, err := ddbc.CreateTable(ctx, &dynamodb.CreateTableInput{
+			TableName: &tableName,
+			ProvisionedThroughput: &types.ProvisionedThroughput{
+				ReadCapacityUnits:  aws.Int64(1),
+				WriteCapacityUnits: aws.Int64(1),
 			},
-			{
-				AttributeName: aws.String("date"),
-				AttributeType: types.ScalarAttributeTypeN,
+			AttributeDefinitions: []types.AttributeDefinition{
+				{
+					AttributeName: aws.String("user_id"),
+					AttributeType: types.ScalarAttributeTypeS,
+				},
+				{
+					AttributeName: aws.String("date"),
+					AttributeType: types.ScalarAttributeTypeN,
+				},
 			},
-		},
-		KeySchema: []types.KeySchemaElement{
-			{
-				AttributeName: aws.String("user_id"),
-				KeyType:       types.KeyTypeHash,
+			KeySchema: []types.KeySchemaElement{
+				{
+					AttributeName: aws.String("user_id"),
+					KeyType:       types.KeyTypeHash,
+				},
+				{
+					AttributeName: aws.String("date"),
+					KeyType:       types.KeyTypeRange,
+				},
 			},
-			{
-				AttributeName: aws.String("date"),
-				KeyType:       types.KeyTypeRange,
+		})
+		require.NoError(t, err)
+
+		require.NoError(t, dynamodb.NewTableExistsWaiter(ddbc).Wait(
+			ctx,
+			&dynamodb.DescribeTableInput{
+				TableName: aws.String(tableName),
 			},
-		},
+			time.Minute,
+		))
 	})
-	require.NoError(err)
 
-	require.NoError(dynamodb.NewTableExistsWaiter(ddbc).Wait(
-		ctx,
-		&dynamodb.DescribeTableInput{
-			TableName: aws.String(tableName),
+	return table.New(ddbc, tableName).
+		WithHashKey("user_id", types.ScalarAttributeTypeS).
+		WithRangeKey("date", types.ScalarAttributeTypeN)
+}
+
+func TestTableV2(t *testing.T) {
+	now := time.Now()
+
+	items := []TestItem2{
+		{
+			UserID: "foobar-1",
+			Date:   now.Unix(),
+
+			Status: "waiting",
+			Memo: []*TestItem2Memo{
+				{
+					Name: "memo1",
+					Memo: "memo1-memo",
+					Tag: []string{
+						"tag1",
+						"tag2",
+					},
+				},
+				{
+					Name: "memo2",
+					Memo: "memo2-memo",
+					Tag: []string{
+						"tag3",
+						"tag4",
+					},
+				},
+			},
 		},
-		time.Minute,
-	))
+		{
+			UserID: "foobar-1",
+			Date:   now.Add(1 * time.Minute).Unix(),
 
-	//
-	//	dtable := table.New(ddbc, tableName).
-	//		WithHashKey("user_id", "S").
-	//		WithRangeKey("date", "N")
-	//
-	//	now := time.Now()
-	//
-	//	items := []TestItem{
-	//		{
-	//			UserID:   "foobar-1",
-	//			Date:     now.Unix(),
-	//			Status:   "waiting",
-	//			Password: "hogehoge",
-	//		},
-	//		{
-	//			UserID:   "foobar-1",
-	//			Date:     now.Add(1 * time.Minute).Unix(),
-	//			Status:   "waiting",
-	//			Password: "fugafuga",
-	//		},
-	//	}
-	//
-	//	hashKey := attributes.String(items[0].UserID)
-	//	rangeKey := attributes.Number(items[0].Date)
-	//	status := attributes.String(items[0].Status)
-	//
-	//	role := []string{"user", "manager"}
-	//	sort.Strings(role)
-	//
-	//	// Try to get non-exist key and it should return table.ErrItemNotFound
-	//	{
-	//		var actualItem TestItem
-	//		err := dtable.GetItem(hashKey, rangeKey, &actualItem, option.ConsistentRead())
-	//		assert.Equal(table.ErrItemNotFound, err)
-	//	}
-	//
-	//	{
-	//		for _, item := range items {
-	//			if err := dtable.PutItem(item); err != nil {
-	//				t.Error(err)
-	//			}
-	//		}
-	//	}
-	//
-	//	// Add condition and it should fail
-	//	{
-	//		err := dtable.PutItem(
-	//			items[0],
-	//			option.PutExpressionAttributeName("date", "#date"),
-	//			option.PutCondition("attribute_not_exists(#date)"),
-	//		)
-	//
-	//		assert.Error(err)
-	//
-	//		dynamoErr, ok := err.(awserr.Error)
-	//		assert.True(ok, "err must be awserr.Error")
-	//		assert.Equal("ConditionalCheckFailedException", dynamoErr.Code())
-	//	}
+			Status: "waiting",
+
+			Memo: []*TestItem2Memo{
+				{
+					Name: "memo3",
+					Memo: "memo3-memo",
+					Tag: []string{
+						"tag5",
+						"tag6",
+					},
+				},
+				{
+					Name: "memo4",
+					Memo: "memo4-memo",
+					Tag: []string{
+						"tag7",
+						"tag8",
+					},
+				},
+			},
+		},
+	}
+
+	role := []string{"user", "manager"}
+	sort.Strings(role)
+
+	t.Run("GetItem should return table.ErrItemNotFound if try to get non-exist key", func(t *testing.T) {
+		dtable := newTestTable(t)
+
+		hashKey := attributes.String(items[0].UserID)
+		rangeKey := attributes.Number(items[0].Date)
+
+		var actualItem TestItem2
+		err := dtable.GetItem(context.TODO(), hashKey, rangeKey, &actualItem, option.ConsistentRead())
+		require.Error(t, err)
+		assert.ErrorIs(t, err, table.ErrItemNotFound)
+	})
+
+	t.Run("PutItem should fail when a given condition is not met", func(t *testing.T) {
+		dtable := newTestTable(t)
+
+		for _, item := range items {
+			if err := dtable.PutItem(context.TODO(), item); err != nil {
+				t.Error(err)
+			}
+		}
+
+		// Add condition and it should fail
+		cond := expression.Name("date").AttributeNotExists()
+		expr, err := expression.NewBuilder().
+			WithCondition(cond).
+			Build()
+
+		require.NoError(t, err)
+
+		err = dtable.PutItem(
+			context.TODO(),
+			items[0],
+			option.PutExpressionAttributeNames(expr.Names()),
+			option.PutCondition(expr.Condition()),
+		)
+
+		require.Error(t, err)
+
+		t.Run("Assert error with *types.ConditionalCheckFailedException", func(t *testing.T) {
+			var exception *types.ConditionalCheckFailedException
+			assert.True(t, errors.As(err, &exception))
+			assert.Equal(t, "ConditionalCheckFailedException", exception.ErrorCode())
+		})
+
+		t.Run("Assert error with smith.APIError", func(t *testing.T) {
+			var ae smithy.APIError
+			assert.True(t, errors.As(err, &ae))
+			assert.Equal(t, "ConditionalCheckFailedException", ae.ErrorCode())
+		})
+	})
+
 	//
 	//	// Update the item with incrementing counter and setting role as StringSet
 	//	{
