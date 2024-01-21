@@ -14,8 +14,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/nabeken/aws-go-dynamodb/attributes"
-	"github.com/nabeken/aws-go-dynamodb/table/option"
+	"github.com/nabeken/aws-go-dynamodb/v2/attributes"
+	"github.com/nabeken/aws-go-dynamodb/v2/table/option"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -106,7 +106,8 @@ func (i TestItem) MarshalItem() (map[string]*dynamodb.AttributeValue, error) {
 func newDynamoDBLocalClient() *dynamodb.DynamoDB {
 	conf := aws.NewConfig().
 		WithCredentials(credentials.NewStaticCredentials("AWSGODDBTESTING", "dummy", "")).
-		WithEndpoint("http://127.0.0.1:8000")
+		WithEndpoint("http://127.0.0.1:18000").
+		WithRegion("local")
 	return dynamodb.New(session.New(conf))
 }
 

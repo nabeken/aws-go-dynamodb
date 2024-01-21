@@ -1,4 +1,4 @@
-module github.com/nabeken/aws-go-dynamodb
+module github.com/nabeken/aws-go-dynamodb/v2
 
 go 1.15
 

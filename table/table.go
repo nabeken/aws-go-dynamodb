@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbiface"
-	"github.com/nabeken/aws-go-dynamodb/item"
-	"github.com/nabeken/aws-go-dynamodb/table/option"
+	"github.com/nabeken/aws-go-dynamodb/v2/item"
+	"github.com/nabeken/aws-go-dynamodb/v2/table/option"
 )
 
 // ErrItemNotFound will be returned when the item is not found.

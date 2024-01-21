@@ -4,7 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/nabeken/aws-go-dynamodb/item"
+	"github.com/nabeken/aws-go-dynamodb/v2/item"
 )
 
 // The QueryInput type is an adapter to change a parameter in
