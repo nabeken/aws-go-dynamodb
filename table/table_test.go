@@ -113,7 +113,7 @@ func newDynamoDBLocalClient() *dynamodb.DynamoDB {
 }
 
 func TestTable(t *testing.T) {
-	var tableName = fmt.Sprintf("aws-go-dynamodb-testing-%d", time.Now().Unix())
+	var tableName = fmt.Sprintf("aws-go-dynamodb-testing-%d", time.Now().UnixNano())
 
 	assert := assert.New(t)
 	require := require.New(t)
