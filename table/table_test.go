@@ -1,4 +1,4 @@
-package table
+package table_test
 
 import (
 	"crypto/sha256"
@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/nabeken/aws-go-dynamodb/v2/attributes"
+	"github.com/nabeken/aws-go-dynamodb/v2/table"
 	"github.com/nabeken/aws-go-dynamodb/v2/table/option"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -154,7 +155,7 @@ func TestTable(t *testing.T) {
 		TableName: &tableName,
 	}))
 
-	dtable := New(ddbc, tableName).
+	dtable := table.New(ddbc, tableName).
 		WithHashKey("user_id", "S").
 		WithRangeKey("date", "N")
 
@@ -186,7 +187,7 @@ func TestTable(t *testing.T) {
 	{
 		var actualItem TestItem
 		err := dtable.GetItem(hashKey, rangeKey, &actualItem, option.ConsistentRead())
-		assert.Equal(ErrItemNotFound, err)
+		assert.Equal(table.ErrItemNotFound, err)
 	}
 
 	{
