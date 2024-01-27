@@ -23,13 +23,13 @@ You can find the examples in [the test code](https://github.com/nabeken/aws-go-d
 
 **item.{Unmarshaler,Marshaler}**:
 
-The `Unmarshaler` and `Marshaler` interface in v1 have been deprecatd in favor of the official [`attributevalue.Unmarshaler`](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue#Unmarshaler) and  [`attributevalue.Marshaler`](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue#Marshaler).
+The `Unmarshaler` and `Marshaler` interface in v1 have been removed in favor of the official [`attributevalue.Unmarshaler`](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue#Unmarshaler) and  [`attributevalue.Marshaler`](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue#Marshaler).
 
 **Marshaling and Unmashaling**:
 
 v2 now uses the official [`attributevalue`](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue) package to marshal Go value into DynamoDB item and unmarshal DynamoDB item into Go value.
 
-You have to add `dynamodbav` struct tag to make it work with it.
+You have to add `dynamodbav` struct tag to make your struct work with the `attributevalue` package.
 
 **List and Set in DynamoDB**:
 
