@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -23,13 +24,30 @@ import (
 
 // TestItem2 is a struct to demonstrate marshal and unmarshal with attributevalue for v2.
 type TestItem2 struct {
-	UserID     string   `json:"user_id" dynamodbav:"user_id"`
-	Date       int64    `json:"date" dynamodbav:"date"`
-	Status     string   `json:"status" dynamodbav:"status"`
-	LoginCount int      `json:"login_count" dynamodbav:"login_count"`
-	Role       []string `json:"role" dynamodbav:"role"`
+	UserID     string `json:"user_id" dynamodbav:"user_id"`
+	Date       int64  `json:"date" dynamodbav:"date"`
+	Status     string `json:"status" dynamodbav:"status"`
+	LoginCount int    `json:"login_count" dynamodbav:"login_count"`
+
+	// For StringSet
+	Role []string `json:"role" dynamodbav:"role,stringset"`
+
+	// For LIST
+	Tag []string `json:"tag" dynamodbav:"tag"`
 
 	Memo []*TestItem2Memo `json:"memo" dynamodbav:"memo"`
+}
+
+func (i *TestItem2) PrimaryKeyMap() map[string]interface{} {
+	return map[string]interface{}{
+		"user_id": i.UserID,
+		"date":    i.Date,
+	}
+}
+
+func (i *TestItem2) PrimaryKey() map[string]types.AttributeValue {
+	item, _ := attributevalue.MarshalMap(i.PrimaryKeyMap())
+	return item
 }
 
 type TestItem2Memo struct {
@@ -154,9 +172,6 @@ func TestTableV2(t *testing.T) {
 		},
 	}
 
-	role := []string{"user", "manager"}
-	sort.Strings(role)
-
 	t.Run("GetItem should return table.ErrItemNotFound if try to get non-exist key", func(t *testing.T) {
 		dtable := newTestTable(t)
 
@@ -208,187 +223,298 @@ func TestTableV2(t *testing.T) {
 		})
 	})
 
-	//
-	//	// Update the item with incrementing counter and setting role as StringSet
-	//	{
-	//		_, err := dtable.UpdateItem(
-	//			hashKey,
-	//			rangeKey,
-	//			option.UpdateExpressionAttributeName("login_count", "#count"),
-	//			option.UpdateExpressionAttributeName("role", "#role"),
-	//			option.UpdateExpressionAttributeValue(":i", attributes.Number(1)),
-	//			option.UpdateExpressionAttributeValue(":role", attributes.StringSet(role)),
-	//			option.UpdateExpression("ADD #count :i SET #role = :role"),
-	//		)
-	//		if err != nil {
-	//			t.Error(err)
-	//		}
-	//	}
-	//
-	//	// Get the item
-	//	{
-	//		var actualItem TestItem
-	//		if err := dtable.GetItem(hashKey, rangeKey, &actualItem, option.ConsistentRead()); err != nil {
-	//			t.Error(err)
-	//		}
-	//		sort.Strings(actualItem.Role)
-	//
-	//		assert.Equal("waiting", actualItem.Status)
-	//		assert.Equal(1, actualItem.LoginCount)
-	//		assert.Equal(role, actualItem.Role)
-	//	}
-	//
-	//	// Update the item with decrementing counter and removing role
-	//	{
-	//		_, err := dtable.UpdateItem(
-	//			hashKey,
-	//			rangeKey,
-	//			option.UpdateExpressionAttributeName("login_count", "#count"),
-	//			option.UpdateExpressionAttributeName("role", "#role"),
-	//			option.UpdateExpressionAttributeValue(":i", attributes.Number(-1)),
-	//			option.UpdateExpression("ADD #count :i REMOVE #role"),
-	//		)
-	//		if err != nil {
-	//			t.Error(err)
-	//		}
-	//	}
-	//
-	//	// Query the items
-	//	{
-	//		var actualItems []TestItem
-	//		lastEvaluatedKey, err := dtable.Query(
-	//			&actualItems,
-	//			option.QueryExpressionAttributeValue(":hashval", hashKey),
-	//			option.QueryKeyConditionExpression("user_id = :hashval"),
-	//		)
-	//
-	//		assert.NoError(err)
-	//		assert.Nil(lastEvaluatedKey)
-	//		assert.Len(actualItems, 2)
-	//
-	//		// default is ascending order
-	//		for i := range actualItems {
-	//			sort.Strings(actualItems[i].Role)
-	//
-	//			assert.Equal(items[i].Status, actualItems[i].Status)
-	//			assert.Equal(items[i].LoginCount, actualItems[i].LoginCount)
-	//			assert.Equal(items[i].Role, actualItems[i].Role)
-	//		}
-	//	}
-	//
-	//	// Query the items with ExclusiveStartKey
-	//	{
-	//		esks := []interface{}{
-	//			items[0].PrimaryKey(),
-	//			&TestItem{
-	//				UserID: items[0].UserID,
-	//				Date:   items[0].Date,
-	//			},
-	//			items[0].PrimaryKeyMap(),
-	//		}
-	//		for _, esk := range esks {
-	//			var actualItems []TestItem
-	//			lastEvaluatedKey, err := dtable.Query(
-	//				&actualItems,
-	//				option.QueryExpressionAttributeValue(":hashval", hashKey),
-	//				option.QueryKeyConditionExpression("user_id = :hashval"),
-	//				option.ExclusiveStartKey(esk),
-	//			)
-	//
-	//			assert.NoError(err)
-	//			assert.Nil(lastEvaluatedKey)
-	//			if assert.Len(actualItems, 1) {
-	//				for i := range actualItems {
-	//					sort.Strings(actualItems[i].Role)
-	//
-	//					assert.Equal(items[i].Status, actualItems[i].Status)
-	//					assert.Equal(items[i].LoginCount, actualItems[i].LoginCount)
-	//					assert.Equal(items[i].Role, actualItems[i].Role)
-	//				}
-	//			}
-	//		}
-	//	}
-	//
-	//	// Query the items with ExclusiveStartKey but it causes an error
-	//	{
-	//		var actualItems []TestItem
-	//		_, err := dtable.Query(
-	//			&actualItems,
-	//			option.QueryExpressionAttributeValue(":hashval", hashKey),
-	//			option.QueryKeyConditionExpression("user_id = :hashval"),
-	//			option.ExclusiveStartKey("THIS IS NOT A MAP"),
-	//		)
-	//		assert.Error(err)
-	//
-	//		awsErr, ok := err.(awserr.Error)
-	//		if assert.True(ok, "err must be awserr.Error") {
-	//			assert.Equal("SerializationError", awsErr.Code())
-	//		}
-	//	}
-	//
-	//	// Query the items with ProjectionExpression
-	//	{
-	//		var actualItems []TestItem
-	//		_, err := dtable.Query(
-	//			&actualItems,
-	//			option.QueryExpressionAttributeValue(":hashval", hashKey),
-	//			option.QueryKeyConditionExpression("user_id = :hashval"),
-	//			option.ProjectionExpression("user_id"),
-	//		)
-	//		assert.NoError(err)
-	//		assert.Len(actualItems, 2)
-	//
-	//		expectedItems := []TestItem{}
-	//		for _, i := range items {
-	//			expectedItems = append(expectedItems, TestItem{
-	//				UserID: i.UserID,
-	//			})
-	//		}
-	//		assert.Equal(expectedItems, actualItems)
-	//	}
+	t.Run("Update an item with SET, ADD, DELETE and REMOVE operation", func(t *testing.T) {
+		role := []string{"user", "manager"}
+		tag := []string{"tag1", "tag2"}
 
-	//	// TODO: Query the items with invalid out object (non-slice)
-	//
-	//	// Delete the item with the conditon but it should fail
-	//	{
-	//		err := dtable.DeleteItem(
-	//			hashKey,
-	//			rangeKey,
-	//			option.DeleteExpressionAttributeName("status", "#status"),
-	//			option.DeleteExpressionAttributeValue(":s", attributes.String("done")),
-	//			option.DeleteCondition("#status = :s"),
-	//		)
-	//
-	//		if err == nil {
-	//			t.Error("DeleteItem should fail but not fail")
-	//		}
-	//
-	//		dynamoErr, ok := err.(awserr.Error)
-	//		if !ok {
-	//			t.Error("err must be awserr.Error")
-	//		}
-	//
-	//		if dynamoErr.Code() != "ConditionalCheckFailedException" {
-	//			t.Error("dynamoErr must be conditional error")
-	//		}
-	//	}
-	//
-	//	// Delete the item with the condition and it should succeed
-	//	{
-	//		for _, item := range items {
-	//			hk := attributes.String(item.UserID)
-	//			rk := attributes.Number(item.Date)
-	//			err := dtable.DeleteItem(
-	//				hk,
-	//				rk,
-	//				option.DeleteExpressionAttributeName("status", "#status"),
-	//				option.DeleteExpressionAttributeValue(":s", status),
-	//				option.DeleteCondition("#status = :s"),
-	//			)
-	//
-	//			if err != nil {
-	//				t.Error(err)
-	//			}
-	//		}
-	//	}
+		sort.Strings(role)
+
+		dtable := newTestTable(t)
+
+		require.NoError(t, dtable.PutItem(context.TODO(), items[0]))
+
+		hashKey := attributes.String(items[0].UserID)
+		rangeKey := attributes.Number(items[0].Date)
+
+		update := expression.Set(
+			expression.Name("role"),
+			expression.Value(attributes.StringSet(role)), // add role as StringSet
+		).Set(
+			expression.Name("tag"),
+			expression.Value(tag), // add tag as LIST
+		).Add(
+			expression.Name("login_count"),
+			expression.Value(1),
+		)
+
+		expr, err := expression.NewBuilder().
+			WithUpdate(update).
+			Build()
+
+		require.NoError(t, err)
+
+		_, err = dtable.UpdateItem(
+			context.TODO(),
+			hashKey,
+			rangeKey,
+			option.UpdateExpressionAttributeNames(expr.Names()),
+			option.UpdateExpressionAttributeValues(expr.Values()),
+			option.UpdateExpression(expr.Update()),
+		)
+
+		require.NoError(t, err)
+
+		t.Run("Assert SET and ADD operation", func(t *testing.T) {
+			// confirm the result
+			var actualItem TestItem2
+			if err := dtable.GetItem(context.TODO(), hashKey, rangeKey, &actualItem, option.ConsistentRead()); err != nil {
+				t.Error(err)
+			}
+
+			sort.Strings(actualItem.Role)
+
+			assert.Equal(t, "waiting", actualItem.Status, "should not be updated")
+			assert.Equal(t, 1, actualItem.LoginCount, "should be incremented")
+			assert.Equal(t, role, actualItem.Role, "should have multiple roles")
+			assert.Equal(t, tag, actualItem.Tag, "should have multiple tags")
+		})
+
+		t.Run("Assert DEL and ADD operation", func(t *testing.T) {
+			update := expression.Delete(
+				expression.Name("role"),
+				expression.Value(attributes.StringSet([]string{"manager"})),
+			).Set(
+				expression.Name("tag"),
+				expression.ListAppend(expression.Value([]string{"tag3"}), expression.Name("tag")), // appending an element to the beginning
+			).Add(
+				expression.Name("login_count"),
+				expression.Value(-1),
+			)
+
+			expr, err := expression.NewBuilder().
+				WithUpdate(update).
+				Build()
+
+			require.NoError(t, err)
+
+			_, err = dtable.UpdateItem(
+				context.TODO(),
+				hashKey,
+				rangeKey,
+				option.UpdateExpressionAttributeNames(expr.Names()),
+				option.UpdateExpressionAttributeValues(expr.Values()),
+				option.UpdateExpression(expr.Update()),
+			)
+
+			require.NoError(t, err)
+
+			// confirm the result
+			var actualItem TestItem2
+			if err := dtable.GetItem(context.TODO(), hashKey, rangeKey, &actualItem, option.ConsistentRead()); err != nil {
+				t.Error(err)
+			}
+
+			assert.Equal(t, "waiting", actualItem.Status, "should not be updated")
+			assert.Equal(t, 0, actualItem.LoginCount, "should be decremented")
+			assert.Equal(t, []string{"user"}, actualItem.Role, "should one role")
+			assert.Equal(t, []string{"tag3", "tag1", "tag2"}, actualItem.Tag, "should have multiple tags")
+		})
+	})
+
+	t.Run("Query the items", func(t *testing.T) {
+		dtable := newTestTable(t)
+
+		for _, item := range items {
+			require.NoError(t, dtable.PutItem(context.TODO(), item))
+		}
+
+		var actualItems []TestItem2
+
+		hashKey := attributes.String(items[0].UserID)
+
+		expr, err := expression.NewBuilder().
+			WithKeyCondition(expression.Key("user_id").Equal(expression.Value(hashKey))).
+			Build()
+
+		require.NoError(t, err)
+
+		t.Run("Assert ascending order", func(t *testing.T) {
+			lastEvaluatedKey, err := dtable.Query(
+				context.TODO(),
+				&actualItems,
+				option.QueryKeyConditionExpression(expr.KeyCondition()),
+				option.QueryExpressionAttributeNames(expr.Names()),
+				option.QueryExpressionAttributeValues(expr.Values()),
+			)
+
+			assert.NoError(t, err)
+			assert.Nil(t, lastEvaluatedKey)
+			assert.Len(t, actualItems, 2)
+			assert.Equal(t, items, actualItems)
+		})
+
+		t.Run("Assert decending order", func(t *testing.T) {
+			lastEvaluatedKey, err := dtable.Query(
+				context.TODO(),
+				&actualItems,
+				option.Reverse(),
+				option.QueryKeyConditionExpression(expr.KeyCondition()),
+				option.QueryExpressionAttributeNames(expr.Names()),
+				option.QueryExpressionAttributeValues(expr.Values()),
+			)
+
+			assert.NoError(t, err)
+			assert.Nil(t, lastEvaluatedKey)
+			assert.Len(t, actualItems, 2)
+
+			for i := 0; i < len(items); i++ {
+				assert.Equal(t, items[len(items)-i-1], actualItems[i])
+			}
+		})
+
+		t.Run("Assert with ExclusiveStartKey", func(t *testing.T) {
+			for i := 0; i < len(items); i++ {
+				expr, err := expression.NewBuilder().
+					WithKeyCondition(expression.Key("user_id").Equal(expression.Value(hashKey))).
+					Build()
+
+				require.NoError(t, err)
+
+				var actualItems []TestItem2
+				lastEvaluatedKey, err := dtable.Query(
+					context.TODO(),
+					&actualItems,
+					option.QueryKeyConditionExpression(expr.KeyCondition()),
+					option.QueryExpressionAttributeNames(expr.Names()),
+					option.QueryExpressionAttributeValues(expr.Values()),
+					option.ExclusiveStartKey(items[i].PrimaryKey()),
+				)
+
+				require.NoError(t, err)
+				assert.Nil(t, lastEvaluatedKey)
+
+				// item used for ExclusiveStartKey won't be included
+				assert.Equal(t, items[i+1:], actualItems)
+			}
+		})
+
+		t.Run("Assert with an invalid value", func(t *testing.T) {
+			expr, err := expression.NewBuilder().
+				WithKeyCondition(expression.Key("user_id").Equal(expression.Value(hashKey))).
+				Build()
+
+			require.NoError(t, err)
+
+			var invalidActualItem TestItem2
+			_, err = dtable.Query(
+				context.TODO(),
+				&invalidActualItem,
+				option.QueryKeyConditionExpression(expr.KeyCondition()),
+				option.QueryExpressionAttributeNames(expr.Names()),
+				option.QueryExpressionAttributeValues(expr.Values()),
+			)
+
+			assert.ErrorContains(t, err, "unmarshal failed")
+		})
+
+		t.Run("Assert with ProjectionExpression", func(t *testing.T) {
+			expr, err := expression.NewBuilder().
+				WithKeyCondition(expression.Key("user_id").Equal(expression.Value(hashKey))).
+				WithProjection(expression.NamesList(expression.Name("user_id"))).
+				Build()
+
+			require.NoError(t, err)
+
+			var actualItems []TestItem2
+			_, err = dtable.Query(
+				context.TODO(),
+				&actualItems,
+				option.QueryKeyConditionExpression(expr.KeyCondition()),
+				option.QueryExpressionAttributeNames(expr.Names()),
+				option.QueryExpressionAttributeValues(expr.Values()),
+				option.ProjectionExpression(expr.Projection()),
+			)
+
+			assert.NoError(t, err)
+			assert.Len(t, actualItems, 2)
+
+			expectedItems := []TestItem2{}
+			for _, i := range items {
+				expectedItems = append(expectedItems, TestItem2{
+					UserID: i.UserID,
+				})
+			}
+			assert.Equal(t, expectedItems, actualItems)
+		})
+	})
+
+	t.Run("Delete the item with failed condition", func(t *testing.T) {
+		dtable := newTestTable(t)
+
+		require.NoError(t, dtable.PutItem(context.TODO(), items[0]))
+
+		hashKey := attributes.String(items[0].UserID)
+		rangeKey := attributes.Number(items[0].Date)
+
+		expr, err := expression.NewBuilder().
+			WithCondition(expression.Name("status").Equal(expression.Value("done"))).
+			Build()
+
+		require.NoError(t, err)
+
+		err = dtable.DeleteItem(
+			context.TODO(),
+			hashKey,
+			rangeKey,
+
+			option.DeleteExpressionAttributeNames(expr.Names()),
+			option.DeleteExpressionAttributeValues(expr.Values()),
+			option.DeleteCondition(expr.Condition()),
+		)
+
+		require.Error(t, err)
+
+		t.Run("Assert error with *types.ConditionalCheckFailedException", func(t *testing.T) {
+			var exception *types.ConditionalCheckFailedException
+			assert.True(t, errors.As(err, &exception))
+			assert.Equal(t, "ConditionalCheckFailedException", exception.ErrorCode())
+		})
+
+		t.Run("Assert error with smith.APIError", func(t *testing.T) {
+			var ae smithy.APIError
+			assert.True(t, errors.As(err, &ae))
+			assert.Equal(t, "ConditionalCheckFailedException", ae.ErrorCode())
+		})
+	})
+
+	t.Run("Delete the item with failed condition", func(t *testing.T) {
+		dtable := newTestTable(t)
+
+		for _, item := range items {
+			require.NoError(t, dtable.PutItem(context.TODO(), item))
+		}
+
+		for _, item := range items {
+			hashKey := attributes.String(item.UserID)
+			rangeKey := attributes.Number(item.Date)
+
+			expr, err := expression.NewBuilder().
+				WithCondition(expression.Name("status").Equal(expression.Value(item.Status))).
+				Build()
+
+			require.NoError(t, err)
+
+			err = dtable.DeleteItem(
+				context.TODO(),
+				hashKey,
+				rangeKey,
+
+				option.DeleteExpressionAttributeNames(expr.Names()),
+				option.DeleteExpressionAttributeValues(expr.Values()),
+				option.DeleteCondition(expr.Condition()),
+			)
+
+			require.NoError(t, err)
+		}
+	})
 }
