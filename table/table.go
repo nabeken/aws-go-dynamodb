@@ -56,7 +56,7 @@ func (t *Table) WithRangeKey(keyName string, keyAttributeType types.ScalarAttrib
 
 // PutItem puts an item on the table.
 // It invokes attributevalue.MarshalMap function to marshal v.
-func (t *Table) PutItem(ctx context.Context, v interface{}, opts ...option.PutItemInput) error {
+func (t *Table) PutItem(ctx context.Context, v interface{}, opts ...option.PutItemInputOption) error {
 	req := &dynamodb.PutItemInput{
 		TableName: t.Name,
 	}
@@ -69,7 +69,7 @@ func (t *Table) PutItem(ctx context.Context, v interface{}, opts ...option.PutIt
 	req.Item = itemMapped
 
 	for _, f := range opts {
-		f(req)
+		f.ApplyToPutItemInput(req)
 	}
 
 	_, err = t.DynamoDB.PutItem(ctx, req)
@@ -77,7 +77,7 @@ func (t *Table) PutItem(ctx context.Context, v interface{}, opts ...option.PutIt
 }
 
 // UpdateItem updates the item on the table.
-func (t *Table) UpdateItem(ctx context.Context, hashKeyValue, rangeKeyValue types.AttributeValue, opts ...option.UpdateItemInput) (*dynamodb.UpdateItemOutput, error) {
+func (t *Table) UpdateItem(ctx context.Context, hashKeyValue, rangeKeyValue types.AttributeValue, opts ...option.UpdateItemInputOption) (*dynamodb.UpdateItemOutput, error) {
 	req := &dynamodb.UpdateItemInput{
 		TableName: t.Name,
 	}
@@ -92,7 +92,7 @@ func (t *Table) UpdateItem(ctx context.Context, hashKeyValue, rangeKeyValue type
 	req.Key = key
 
 	for _, f := range opts {
-		f(req)
+		f.ApplyToUpdateItemInput(req)
 	}
 
 	return t.DynamoDB.UpdateItem(ctx, req)
@@ -100,7 +100,7 @@ func (t *Table) UpdateItem(ctx context.Context, hashKeyValue, rangeKeyValue type
 
 // GetItem get the item from the table and convert it to v.
 // It invokes attributevalue.UnmarshalMap function to unmarshal an item into v.
-func (t *Table) GetItem(ctx context.Context, hashKeyValue, rangeKeyValue types.AttributeValue, v interface{}, opts ...option.GetItemInput) error {
+func (t *Table) GetItem(ctx context.Context, hashKeyValue, rangeKeyValue types.AttributeValue, v interface{}, opts ...option.GetItemInputOption) error {
 	req := &dynamodb.GetItemInput{
 		TableName: t.Name,
 	}
@@ -115,7 +115,7 @@ func (t *Table) GetItem(ctx context.Context, hashKeyValue, rangeKeyValue types.A
 	req.Key = key
 
 	for _, f := range opts {
-		f(req)
+		f.ApplyToGetItemInput(req)
 	}
 
 	resp, err := t.DynamoDB.GetItem(ctx, req)
@@ -132,13 +132,13 @@ func (t *Table) GetItem(ctx context.Context, hashKeyValue, rangeKeyValue types.A
 
 // Query queries items to the table and convert it to v. v must be a slice of struct.
 // If the Query operation does not return the last page, LastEvaluatedKey will be returned.
-func (t *Table) Query(ctx context.Context, slice interface{}, opts ...option.QueryInput) (map[string]types.AttributeValue, error) {
+func (t *Table) Query(ctx context.Context, slice interface{}, opts ...option.QueryInputOption) (map[string]types.AttributeValue, error) {
 	req := &dynamodb.QueryInput{
 		TableName: t.Name,
 	}
 
 	for _, f := range opts {
-		f(req)
+		f.ApplyToQueryInput(req)
 	}
 
 	resp, err := t.DynamoDB.Query(ctx, req)
@@ -154,7 +154,7 @@ func (t *Table) Query(ctx context.Context, slice interface{}, opts ...option.Que
 }
 
 // DeleteItem deletes the item in the table.
-func (t *Table) DeleteItem(ctx context.Context, hashKeyValue, rangeKeyValue types.AttributeValue, opts ...option.DeleteItemInput) error {
+func (t *Table) DeleteItem(ctx context.Context, hashKeyValue, rangeKeyValue types.AttributeValue, opts ...option.DeleteItemInputOption) error {
 	req := &dynamodb.DeleteItemInput{
 		TableName: t.Name,
 	}
@@ -169,7 +169,7 @@ func (t *Table) DeleteItem(ctx context.Context, hashKeyValue, rangeKeyValue type
 	req.Key = key
 
 	for _, f := range opts {
-		f(req)
+		f.ApplyToDeleteItemInput(req)
 	}
 
 	_, err := t.DynamoDB.DeleteItem(ctx, req)
