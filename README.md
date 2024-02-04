@@ -50,6 +50,15 @@ assert.True(t, errors.As(err, &exception))
 assert.Equal(t, "ConditionalCheckFailedException", exception.ErrorCode())
 ```
 
+**Handling options**:
+
+The option appliers are converted into an interface from the optional function pattern.
+
+Example:
+```go
+dtable.GetItem(context.TODO(), hashKey, rangeKey, &actualItem, option.ConsistentRead(true))
+```
+
 ## v1
 
 If you want to use this library with `aws-sdk-go`, please use v1 version of the library.

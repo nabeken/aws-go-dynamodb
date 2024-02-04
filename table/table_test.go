@@ -179,7 +179,7 @@ func TestTable(t *testing.T) {
 		rangeKey := attributes.Number(items[0].Date)
 
 		var actualItem TestItem
-		err := dtable.GetItem(context.TODO(), hashKey, rangeKey, &actualItem, option.ConsistentRead())
+		err := dtable.GetItem(context.TODO(), hashKey, rangeKey, &actualItem, option.ConsistentRead(true))
 		require.Error(t, err)
 		assert.ErrorIs(t, err, table.ErrItemNotFound)
 	})
@@ -204,8 +204,8 @@ func TestTable(t *testing.T) {
 		err = dtable.PutItem(
 			context.TODO(),
 			items[0],
-			option.PutExpressionAttributeNames(expr.Names()),
-			option.PutCondition(expr.Condition()),
+			option.ExpressionAttributeNames(expr.Names()),
+			(*option.Condition)(expr.Condition()),
 		)
 
 		require.Error(t, err)
@@ -257,8 +257,8 @@ func TestTable(t *testing.T) {
 			context.TODO(),
 			hashKey,
 			rangeKey,
-			option.UpdateExpressionAttributeNames(expr.Names()),
-			option.UpdateExpressionAttributeValues(expr.Values()),
+			option.ExpressionAttributeNames(expr.Names()),
+			option.ExpressionAttributeValues(expr.Values()),
 			option.UpdateExpression(expr.Update()),
 		)
 
@@ -267,7 +267,7 @@ func TestTable(t *testing.T) {
 		t.Run("Assert SET and ADD operation", func(t *testing.T) {
 			// confirm the result
 			var actualItem TestItem
-			if err := dtable.GetItem(context.TODO(), hashKey, rangeKey, &actualItem, option.ConsistentRead()); err != nil {
+			if err := dtable.GetItem(context.TODO(), hashKey, rangeKey, &actualItem, option.ConsistentRead(true)); err != nil {
 				t.Error(err)
 			}
 
@@ -301,8 +301,8 @@ func TestTable(t *testing.T) {
 				context.TODO(),
 				hashKey,
 				rangeKey,
-				option.UpdateExpressionAttributeNames(expr.Names()),
-				option.UpdateExpressionAttributeValues(expr.Values()),
+				option.ExpressionAttributeNames(expr.Names()),
+				option.ExpressionAttributeValues(expr.Values()),
 				option.UpdateExpression(expr.Update()),
 			)
 
@@ -310,7 +310,7 @@ func TestTable(t *testing.T) {
 
 			// confirm the result
 			var actualItem TestItem
-			if err := dtable.GetItem(context.TODO(), hashKey, rangeKey, &actualItem, option.ConsistentRead()); err != nil {
+			if err := dtable.GetItem(context.TODO(), hashKey, rangeKey, &actualItem, option.ConsistentRead(true)); err != nil {
 				t.Error(err)
 			}
 
@@ -342,9 +342,9 @@ func TestTable(t *testing.T) {
 			lastEvaluatedKey, err := dtable.Query(
 				context.TODO(),
 				&actualItems,
-				option.QueryKeyConditionExpression(expr.KeyCondition()),
-				option.QueryExpressionAttributeNames(expr.Names()),
-				option.QueryExpressionAttributeValues(expr.Values()),
+				(*option.KeyConditionExpression)(expr.KeyCondition()),
+				option.ExpressionAttributeNames(expr.Names()),
+				option.ExpressionAttributeValues(expr.Values()),
 			)
 
 			assert.NoError(t, err)
@@ -357,10 +357,10 @@ func TestTable(t *testing.T) {
 			lastEvaluatedKey, err := dtable.Query(
 				context.TODO(),
 				&actualItems,
-				option.Reverse(),
-				option.QueryKeyConditionExpression(expr.KeyCondition()),
-				option.QueryExpressionAttributeNames(expr.Names()),
-				option.QueryExpressionAttributeValues(expr.Values()),
+				option.Reverse(true),
+				(*option.KeyConditionExpression)(expr.KeyCondition()),
+				option.ExpressionAttributeNames(expr.Names()),
+				option.ExpressionAttributeValues(expr.Values()),
 			)
 
 			assert.NoError(t, err)
@@ -384,9 +384,9 @@ func TestTable(t *testing.T) {
 				lastEvaluatedKey, err := dtable.Query(
 					context.TODO(),
 					&actualItems,
-					option.QueryKeyConditionExpression(expr.KeyCondition()),
-					option.QueryExpressionAttributeNames(expr.Names()),
-					option.QueryExpressionAttributeValues(expr.Values()),
+					(*option.KeyConditionExpression)(expr.KeyCondition()),
+					option.ExpressionAttributeNames(expr.Names()),
+					option.ExpressionAttributeValues(expr.Values()),
 					option.ExclusiveStartKey(items[i].PrimaryKey()),
 				)
 
@@ -409,9 +409,9 @@ func TestTable(t *testing.T) {
 			_, err = dtable.Query(
 				context.TODO(),
 				&invalidActualItem,
-				option.QueryKeyConditionExpression(expr.KeyCondition()),
-				option.QueryExpressionAttributeNames(expr.Names()),
-				option.QueryExpressionAttributeValues(expr.Values()),
+				(*option.KeyConditionExpression)(expr.KeyCondition()),
+				option.ExpressionAttributeNames(expr.Names()),
+				option.ExpressionAttributeValues(expr.Values()),
 			)
 
 			assert.ErrorContains(t, err, "unmarshal failed")
@@ -429,10 +429,10 @@ func TestTable(t *testing.T) {
 			_, err = dtable.Query(
 				context.TODO(),
 				&actualItems,
-				option.QueryKeyConditionExpression(expr.KeyCondition()),
-				option.QueryExpressionAttributeNames(expr.Names()),
-				option.QueryExpressionAttributeValues(expr.Values()),
-				option.ProjectionExpression(expr.Projection()),
+				(*option.KeyConditionExpression)(expr.KeyCondition()),
+				option.ExpressionAttributeNames(expr.Names()),
+				option.ExpressionAttributeValues(expr.Values()),
+				(*option.ProjectionExpression)(expr.Projection()),
 			)
 
 			assert.NoError(t, err)
@@ -467,9 +467,9 @@ func TestTable(t *testing.T) {
 			hashKey,
 			rangeKey,
 
-			option.DeleteExpressionAttributeNames(expr.Names()),
-			option.DeleteExpressionAttributeValues(expr.Values()),
-			option.DeleteCondition(expr.Condition()),
+			option.ExpressionAttributeNames(expr.Names()),
+			option.ExpressionAttributeValues(expr.Values()),
+			(*option.Condition)(expr.Condition()),
 		)
 
 		require.Error(t, err)
@@ -509,9 +509,9 @@ func TestTable(t *testing.T) {
 				hashKey,
 				rangeKey,
 
-				option.DeleteExpressionAttributeNames(expr.Names()),
-				option.DeleteExpressionAttributeValues(expr.Values()),
-				option.DeleteCondition(expr.Condition()),
+				option.ExpressionAttributeNames(expr.Names()),
+				option.ExpressionAttributeValues(expr.Values()),
+				(*option.Condition)(expr.Condition()),
 			)
 
 			require.NoError(t, err)
