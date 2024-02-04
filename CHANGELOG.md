@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.0](https://github.com/nabeken/aws-go-dynamodb/compare/v2.0.0...v2.1.0) (2024-02-04)
+
+
+### Features
+
+* convert the functional option pattern with the interface ([#49](https://github.com/nabeken/aws-go-dynamodb/issues/49)) ([e282d0d](https://github.com/nabeken/aws-go-dynamodb/commit/e282d0ddbefa857a6d6eb01c4c80370cb68ed311))
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#47](https://github.com/nabeken/aws-go-dynamodb/issues/47)) ([2596db8](https://github.com/nabeken/aws-go-dynamodb/commit/2596db8674dc9e7541a7f7300cefba77c99d17c3))
+
 ## [2.0.0](https://github.com/nabeken/aws-go-dynamodb/compare/v1.0.2...v2.0.0) (2024-01-27)
 
 
