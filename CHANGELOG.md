@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.1.1](https://github.com/nabeken/aws-go-dynamodb/compare/v2.1.0...v2.1.1) (2024-03-23)
+
+
+### Bug Fixes
+
+* add the compat test ([#58](https://github.com/nabeken/aws-go-dynamodb/issues/58)) ([668f6ea](https://github.com/nabeken/aws-go-dynamodb/commit/668f6eac14b5da079edf10a0f0c5fea06b877a0a))
+* **deps:** update all non-major dependencies ([#52](https://github.com/nabeken/aws-go-dynamodb/issues/52)) ([370ef23](https://github.com/nabeken/aws-go-dynamodb/commit/370ef231c39dd13079c69391fcf0de07d3655eaa))
+* **deps:** update all non-major dependencies ([#53](https://github.com/nabeken/aws-go-dynamodb/issues/53)) ([fcc3dc2](https://github.com/nabeken/aws-go-dynamodb/commit/fcc3dc2e2677b65ea0eed633001a618e0df1f5f6))
+* **deps:** update all non-major dependencies ([#55](https://github.com/nabeken/aws-go-dynamodb/issues/55)) ([5cf015a](https://github.com/nabeken/aws-go-dynamodb/commit/5cf015a978fc37a2da44d16446375c9bed12ae5b))
+* **deps:** update all non-major dependencies ([#57](https://github.com/nabeken/aws-go-dynamodb/issues/57)) ([c94acd5](https://github.com/nabeken/aws-go-dynamodb/commit/c94acd56366cb4236bb856fb19a1b549c0a468b8))
+* **deps:** update dependency golang to v1.22.0 ([#50](https://github.com/nabeken/aws-go-dynamodb/issues/50)) ([af455e4](https://github.com/nabeken/aws-go-dynamodb/commit/af455e4dd07d1896cf4d4a071b531c33351b7db3))
+* **deps:** update dependency golang to v1.22.1 ([#54](https://github.com/nabeken/aws-go-dynamodb/issues/54)) ([ad3c95a](https://github.com/nabeken/aws-go-dynamodb/commit/ad3c95ae94b954889a560a0f79f547293b4f4a98))
+* **deps:** update google-github-actions/release-please-action digest to a37ac6e ([#56](https://github.com/nabeken/aws-go-dynamodb/issues/56)) ([4459968](https://github.com/nabeken/aws-go-dynamodb/commit/4459968516c5ccc1789378504463d9e77dab494f))
+
 ## [2.1.0](https://github.com/nabeken/aws-go-dynamodb/compare/v2.0.0...v2.1.0) (2024-02-04)
 
 
