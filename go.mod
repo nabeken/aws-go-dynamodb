@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.7.11
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.0
 	github.com/aws/smithy-go v1.20.1
-	github.com/nabeken/aws-go-dynamodb v1.0.2
+	github.com/nabeken/aws-go-dynamodb/v2 v2.1.1
 	github.com/stretchr/testify v1.9.0
 )
 
