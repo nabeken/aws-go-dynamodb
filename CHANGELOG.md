@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.2](https://github.com/nabeken/aws-go-dynamodb/compare/v2.1.1...v2.1.2) (2024-03-24)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/aws/aws-sdk-go to v1.51.6 ([#60](https://github.com/nabeken/aws-go-dynamodb/issues/60)) ([8ef36a5](https://github.com/nabeken/aws-go-dynamodb/commit/8ef36a5b4913e4d73ab9c837a1433d6ca95eb41c))
+* **deps:** update nabeken/go-github-apps digest to 6eb3a08 ([#59](https://github.com/nabeken/aws-go-dynamodb/issues/59)) ([8f83206](https://github.com/nabeken/aws-go-dynamodb/commit/8f832065fa11149964043407e1663e6cedbef08a))
+
 ## [2.1.1](https://github.com/nabeken/aws-go-dynamodb/compare/v2.1.0...v2.1.1) (2024-03-23)
 
 
