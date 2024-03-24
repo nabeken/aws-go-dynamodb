@@ -9,5 +9,13 @@
     "github>nabeken/renovate-config-oss:semanticCommitsFixDeps",
     "github>nabeken/renovate-config-oss:automergeGoPatch",
     "github>nabeken/renovate-config-oss:groupGithubActions"
+  ],
+
+  "packageRules": [
+    {
+      "matchPackagePatterns": ["^github.com/nabeken/aws-go-dynamodb$"],
+      "allowedVersions": "<2.0.0",
+      "matchFileNames": ["table_v1_v2_compat_test.go"]
+    }
   ]
 }
