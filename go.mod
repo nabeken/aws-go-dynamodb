@@ -3,9 +3,9 @@ module github.com/nabeken/aws-go-dynamodb/v2
 go 1.19
 
 require (
-	github.com/aws/aws-sdk-go v1.54.19
+	github.com/aws/aws-sdk-go v1.54.20
 	github.com/aws/aws-sdk-go-v2 v1.30.3
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.26
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.27
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.14.9
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.7.31
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.34.3
