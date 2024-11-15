@@ -7,10 +7,10 @@ toolchain go1.23.3
 require (
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/aws/aws-sdk-go-v2 v1.32.4
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.44
-	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.15.15
-	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.7.50
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.36.5
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.45
+	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.15.16
+	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.7.51
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.37.0
 	github.com/aws/smithy-go v1.22.0
 	github.com/nabeken/aws-go-dynamodb v1.0.2
 	github.com/stretchr/testify v1.9.0
