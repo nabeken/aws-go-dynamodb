@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.4](https://github.com/nabeken/aws-go-dynamodb/compare/v2.1.3...v2.1.4) (2025-03-28)
+
+
+### Bug Fixes
+
+* **deps:** update actions/create-github-app-token digest to af35eda ([#170](https://github.com/nabeken/aws-go-dynamodb/issues/170)) ([eb24d93](https://github.com/nabeken/aws-go-dynamodb/commit/eb24d93d8a3951334bed542c4795f0f00526324c))
+* **deps:** update actions/create-github-app-token digest to d72941d ([#172](https://github.com/nabeken/aws-go-dynamodb/issues/172)) ([d9effed](https://github.com/nabeken/aws-go-dynamodb/commit/d9effed5a13c1774e01e1de427cbed33136c13a9))
+* **deps:** update actions/setup-go digest to 0aaccfd ([#169](https://github.com/nabeken/aws-go-dynamodb/issues/169)) ([8cd0c7d](https://github.com/nabeken/aws-go-dynamodb/commit/8cd0c7d076122407efea70a3ae4a5989e08cb5cc))
+* **deps:** update aws-sdk-go-v2 monorepo ([#167](https://github.com/nabeken/aws-go-dynamodb/issues/167)) ([53f676f](https://github.com/nabeken/aws-go-dynamodb/commit/53f676fde9a00ba7308a4bfeed8d9d0157f8984c))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/credentials to v1.17.65 ([#173](https://github.com/nabeken/aws-go-dynamodb/issues/173)) ([11dd4b9](https://github.com/nabeken/aws-go-dynamodb/commit/11dd4b9678ca32c1750110e968a8d489ee1c0dc8))
+* **deps:** update module github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression to v1.7.75 ([#171](https://github.com/nabeken/aws-go-dynamodb/issues/171)) ([c55372f](https://github.com/nabeken/aws-go-dynamodb/commit/c55372f50b9c2275117fc08fe03b075bbcadd259))
+
 ## [2.1.3](https://github.com/nabeken/aws-go-dynamodb/compare/v2.1.2...v2.1.3) (2025-03-08)
 
 
