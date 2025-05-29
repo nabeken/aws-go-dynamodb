@@ -66,7 +66,7 @@ func (c *Condition) ApplyToPutItemInput(req *dynamodb.PutItemInput) {
 }
 
 // ApplyToUpdateItemInput applies the option to dynamodb.UpdateItemInput.
-func (c *Condition) ApplyToUpdateItemInput(req *dynamodb.PutItemInput) {
+func (c *Condition) ApplyToUpdateItemInput(req *dynamodb.UpdateItemInput) {
 	req.ConditionExpression = (*string)(c)
 }
 
