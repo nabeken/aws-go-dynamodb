@@ -29,7 +29,10 @@ The `Unmarshaler` and `Marshaler` interface in v1 have been removed in favor of 
 
 v2 now uses the official [`attributevalue`](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue) package to marshal Go value into DynamoDB item and unmarshal DynamoDB item into Go value.
 
-You have to add `dynamodbav` struct tag to make your struct work with the `attributevalue` package.
+You have to add `dynamodbav` struct tag to make your struct work with the `attributevalue` package. Please note that a nested struct also needs `dynamodbav` struct in their field.
+I hightly recommend to write a test script to perforum a full comparision by loading and restoring items.
+
+If you have a nested struct with a type you can't change, it would be better to have a your own data struct and fill data manually with `dynamodbav` struct tag.
 
 **List and Set in DynamoDB**:
 
