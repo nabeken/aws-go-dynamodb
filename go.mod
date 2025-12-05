@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.20.26
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.8.26
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.53.2
-	github.com/aws/smithy-go v1.23.2
+	github.com/aws/smithy-go v1.24.0
 	github.com/nabeken/aws-go-dynamodb v1.0.2
 	github.com/stretchr/testify v1.11.1
 )
