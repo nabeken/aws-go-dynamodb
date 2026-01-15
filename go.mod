@@ -2,7 +2,7 @@ module github.com/nabeken/aws-go-dynamodb/v2
 
 go 1.23
 
-toolchain go1.25.5
+toolchain go1.25.6
 
 require (
 	github.com/aws/aws-sdk-go v1.55.8
