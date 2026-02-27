@@ -1,6 +1,6 @@
 module github.com/nabeken/aws-go-dynamodb/v2
 
-go 1.23
+go 1.24
 
 toolchain go1.25.7
 
@@ -11,7 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.20.33
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.8.33
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.56.0
-	github.com/aws/smithy-go v1.24.1
+	github.com/aws/smithy-go v1.24.2
 	github.com/nabeken/aws-go-dynamodb v1.0.2
 	github.com/stretchr/testify v1.11.1
 )
