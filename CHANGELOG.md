@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.1.6](https://github.com/nabeken/aws-go-dynamodb/compare/v2.1.5...v2.1.6) (2026-06-27)
+
+
+### Bug Fixes
+
+* **deps:** update actions/create-github-app-token digest to bcd2ba4 ([#289](https://github.com/nabeken/aws-go-dynamodb/issues/289)) ([2438519](https://github.com/nabeken/aws-go-dynamodb/commit/243851981b2ef6ce5344eff1e8932893e8ee14c5))
+* **deps:** update actions/setup-go digest to 924ae3a ([#298](https://github.com/nabeken/aws-go-dynamodb/issues/298)) ([1009e26](https://github.com/nabeken/aws-go-dynamodb/commit/1009e267f823c323971d7a33812f2904a9d55ad8))
+* **deps:** update aws-sdk-go-v2 monorepo ([#286](https://github.com/nabeken/aws-go-dynamodb/issues/286)) ([966ba82](https://github.com/nabeken/aws-go-dynamodb/commit/966ba821463b216f2f724268578c2d4b9351e677))
+* **deps:** update aws-sdk-go-v2 monorepo ([#290](https://github.com/nabeken/aws-go-dynamodb/issues/290)) ([046330e](https://github.com/nabeken/aws-go-dynamodb/commit/046330e79440cddd6c97aa48fe5f53b2f6435b42))
+* **deps:** update aws-sdk-go-v2 monorepo ([#291](https://github.com/nabeken/aws-go-dynamodb/issues/291)) ([4756809](https://github.com/nabeken/aws-go-dynamodb/commit/4756809a90e253c964773e794328c66f97a471a9))
+* **deps:** update aws-sdk-go-v2 monorepo ([#295](https://github.com/nabeken/aws-go-dynamodb/issues/295)) ([de6610d](https://github.com/nabeken/aws-go-dynamodb/commit/de6610d798ce4b9a05d3e0e35adc3965367abfbf))
+* **deps:** update aws-sdk-go-v2 monorepo ([#296](https://github.com/nabeken/aws-go-dynamodb/issues/296)) ([06df216](https://github.com/nabeken/aws-go-dynamodb/commit/06df21600c9bc7434a0253408f75febec978680a))
+* **deps:** update github-actions to df4cb1c ([#294](https://github.com/nabeken/aws-go-dynamodb/issues/294)) ([669aec4](https://github.com/nabeken/aws-go-dynamodb/commit/669aec4ba9fc54ba4f13721199cf61553f1f93f9))
+* **deps:** update go to v1.26.3 ([#288](https://github.com/nabeken/aws-go-dynamodb/issues/288)) ([13fe57f](https://github.com/nabeken/aws-go-dynamodb/commit/13fe57f1fd6dee2cef4adfbd79f14f493267593a))
+* **deps:** update go to v1.26.4 ([#293](https://github.com/nabeken/aws-go-dynamodb/issues/293)) ([4086034](https://github.com/nabeken/aws-go-dynamodb/commit/408603407a6a3aa0263dd35dc9aaaca33372b56d))
+* **deps:** update module github.com/aws/smithy-go to v1.27.2 ([#292](https://github.com/nabeken/aws-go-dynamodb/issues/292)) ([d15280e](https://github.com/nabeken/aws-go-dynamodb/commit/d15280ec0a1b23189afb25101c031cd4a3dcf9a7))
+* **deps:** update module github.com/aws/smithy-go to v1.27.3 ([#299](https://github.com/nabeken/aws-go-dynamodb/issues/299)) ([27abe59](https://github.com/nabeken/aws-go-dynamodb/commit/27abe59da0d94e47eb2d49d254e3f061164d35d0))
+
 ## [2.1.5](https://github.com/nabeken/aws-go-dynamodb/compare/v2.1.4...v2.1.5) (2026-04-30)
 
 
