@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.7](https://github.com/nabeken/aws-go-dynamodb/compare/v2.1.6...v2.1.7) (2026-11-28)
+
+
+### Bug Fixes
+
+* **deps:** update aws-sdk-go-v2 monorepo ([#341](https://github.com/nabeken/aws-go-dynamodb/issues/341)) ([dfc7a00](https://github.com/nabeken/aws-go-dynamodb/commit/dfc7a001d74b64728769431bcc34f296692641fd))
+* **deps:** update module github.com/aws/smithy-go to v1.28.11 ([#342](https://github.com/nabeken/aws-go-dynamodb/issues/342)) ([5ae1732](https://github.com/nabeken/aws-go-dynamodb/commit/5ae1732b4be72530ce2361151354206cfa71409a))
+
 ## [2.1.6](https://github.com/nabeken/aws-go-dynamodb/compare/v2.1.5...v2.1.6) (2026-11-21)
 
 
